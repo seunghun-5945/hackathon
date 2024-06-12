@@ -3,11 +3,11 @@ import Header from "./Header";
 import Main from "./Main";
 import Footer from "./Footer";
 
-const Layout = () => {
+const Layout = ( {Content} ) => {
   return (
     <>
       <Header/>
-      <Main/>
+        <Main Content={Content}/>
       <Footer/>
     </>
   )

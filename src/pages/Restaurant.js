@@ -1,5 +1,8 @@
 import React from "react";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
+import keyframes from "styled-components";
+import Layout from "../components/Layout";
+import Main from "../components/Main";
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -24,12 +27,15 @@ const Container = styled.div`
   }
 `;
 
-const Main = ( {Content} ) => {
+const RestaurantContent = () => {
   return (
     <Container>
-      {Content}
     </Container>
   );
 };
 
-export default Main;
+const Restaurant = () => {
+  return <Main Content={<RestaurantContent />} />
+}
+
+export default Restaurant;

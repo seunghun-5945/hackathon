@@ -5,6 +5,7 @@ import { IoMdHome } from "react-icons/io";
 import { TiThMenu } from "react-icons/ti";
 import { IoCloseSharp } from "react-icons/io5";
 import { PiCompassRoseLight } from "react-icons/pi";
+import { Link } from "react-router-dom";
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -13,6 +14,7 @@ const Container = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+    overflow-X: hidden;
   }
 
   @media (max-width: 768px) {
@@ -27,11 +29,16 @@ const Container = styled.div`
     color: black;
     border-bottom: 3px solid lightgray;
 
-    svg {
-      font-size: 30px;
+      svg {
+        font-size: 30px;
+      }
+
+      a {
+        text-decoration: none;
+        color: black;
+      }
     }
-  }
-`;
+  `;
 
   const HeaderFrame = styled.div`
     @media (max-width: 768px) {
@@ -59,70 +66,95 @@ const Container = styled.div`
       }
     `;
 
-    const slideDown = keyframes`
-    from {
-      transform: translateY(-100%);
-    }
-    to {
-      transform: translateY(0%);
-    }
-  `;
-  
-  const slideUp = keyframes`
-    from {
-      transform: translateY(-100%);
-    }
-    to {
-      transform: translateY(0%);
-    }
-  `;
+    const slideOpen = keyframes`
+      from {
+        transform: translateX(200%);
+      }
+      to {
+        transform: translateX(0%);
+      }
+    `;
+    
+    const slideClose = keyframes`
+      from {
+        transform: translateX(200%);
+      }
+      to {
+        transform: translateX(0%);
+      }
+    `;
   
 
-      const MenuFrame = styled.div`
+      const MenuContainer = styled.div`
         @media (max-width: 768px) {
-          width: 100%;
-          height: auto;
+          width: 60%;
+          height: 82dvh;
           display: flex;
           flex-direction: column;
+          right: 0px;
           background-color: black;
-          opacity: 0.8;
+          opacity: 0.6;
           position: absolute;
           z-index: 1;
-          animation: ${({ openMenu }) => (openMenu ? slideUp : slideDown)} 0.8s ease forwards; // openMenu 상태에 따라 애니메이션 적용
+          animation: ${({ openMenu }) => (openMenu ? slideOpen : slideClose)} 0.8s ease forwards; // openMenu 상태에 따라 애니메이션 적용
         }
       `;
 
-        const MenuItem = styled.div`
+        const MenuFrame = styled.div`
+          @media (max-width: 768px) {
+            width: 100%;
+            height: 70%;
+          }
+        `;
+
+          const MenuItem = styled.div`
+            width: 100%;
+            height: 8dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid white;
+            color: white;
+            &:hover {
+              background-color: white;
+              color: black;
+              font-size: 20px;
+            }
+          `;
+          
+        const MenuFootFrame = styled.div`
           width: 100%;
-          height: 8dvh;
+          height: 30%;
           display: flex;
-          align-items: center;
+          alignt-items: center;
           justify-content: center;
-          border-top: 1px solid white;
-          color: white;
-          &:hover {
-            background-color: white;
-            color: black;
-            font-size: 20px;
+          img {
+            width: 80%;
+            height: 80%;
           }
         `;
 
       const Menu = () => {
         return (
-          <MenuFrame>
-            <MenuItem>
-              <h3>여행 준비 가이드</h3>
-            </MenuItem>
-            <MenuItem>
-              <h3>근처 맛집 찾기</h3>
-            </MenuItem>
-            <MenuItem>
-              <h3>근처 관광지 찾기</h3>
-            </MenuItem>
-            <MenuItem>
-              <h3>개발자 소개</h3>
-            </MenuItem>
-          </MenuFrame>
+          <MenuContainer>
+            <MenuFrame>
+              <MenuItem>
+                <h3>어플 사용 가이드</h3>
+              </MenuItem>
+              <MenuItem>
+                <h3>근처 맛집 찾기</h3>
+              </MenuItem>
+              <MenuItem>
+                <h3>근처 관광지 찾기</h3>
+              </MenuItem>
+              <MenuItem>
+                <h3>개발자 소개</h3>
+              </MenuItem>
+            </MenuFrame>
+            <MenuFootFrame>
+              <img src="./images/Icon.png"/>
+            </MenuFootFrame>
+          </MenuContainer>
         )
       }
 
@@ -131,18 +163,22 @@ const Header = () => {
   const [openMenu, setMenu] = useState(false);
 
   const handleMenu = () => {
-    setMenu(!openMenu); // openMenu 상태를 반전시킵니다.
+    setMenu(!openMenu); 
+    console.log(openMenu);
   };
   
   return (
     <>
       <Container>
         <HeaderFrame>
-          <IoMdHome />
+          <Link to="/"><IoMdHome /></Link>
             <TitleFrame>
+            <Link to="/" style={{display:"flex", alignItems:"center", justifyContent:"center"}}>
               <PiCompassRoseLight />
               <h2>ANYWHERE</h2>
+              </Link>
             </TitleFrame>
+
             {openMenu ? (
             <IoCloseSharp onClick={handleMenu}  style={{fontSize:"30px"}} />
             ) : (
