@@ -4,6 +4,7 @@ import { MdLanguage } from "react-icons/md";
 import { FaLocationDot } from "react-icons/fa6";
 import { IoRestaurant } from "react-icons/io5";
 import { IoMdHelp } from "react-icons/io";
+import { Link } from "react-router-dom";
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -34,6 +35,9 @@ const Container = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: space-around;
+    a {
+     width: 1000px;
+    }
   `;
 
 
@@ -44,10 +48,12 @@ const Footer = () => {
         <MdLanguage />
         <h5>언어설정</h5>
       </MenuBox>
+      
       <MenuBox>
       <FaLocationDot />
         <h5>위치설정</h5>
       </MenuBox>
+      
       <MenuBox>
         <IoRestaurant />
         <h5>맛집</h5>
