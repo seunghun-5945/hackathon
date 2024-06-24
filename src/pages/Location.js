@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import Layout from '../components/Layout';
 
 const Container = styled.div`
   width: 100%;
@@ -14,19 +13,25 @@ const LocationExample = () => {
 
   const getLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(
-        (position) => {
-          setLocation(position.coords);
-          setError(null);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          try {
+            const response = await fetch(`http://localhost:8000/?data1=${longitude}&data2=${latitude}`);
+            if (!response.ok) {
+              throw new Error('Failed to fetch location data');
+            }
+            const data = await response.json();
+            setLocation(data);
+            setError(null);
+          } catch (error) {
+            setError(error.message);
+            setLocation(null);
+          }
         },
         (error) => {
           setError(error.message);
           setLocation(null);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 5000,
-          maximumAge: 0
         }
       );
     } else {
@@ -35,7 +40,7 @@ const LocationExample = () => {
   };
 
   return (
-    <Container className="App">
+    <Container>
       <h1>Current Location Finder</h1>
       <p>Click the button below to get your current location:</p>
       <button onClick={getLocation}>Get Current Location</button>
@@ -44,6 +49,7 @@ const LocationExample = () => {
       {location && (
         <div>
           <h2>Your Location:</h2>
+          <p>Address: {location.address}</p>
           <p>Latitude: {location.latitude}</p>
           <p>Longitude: {location.longitude}</p>
         </div>
@@ -52,8 +58,4 @@ const LocationExample = () => {
   );
 };
 
-const Location = () => {
-  return <Layout Content={<LocationExample />} />;
-};
-
-export default Location;
+export default LocationExample;
