@@ -18,6 +18,8 @@ const LocationExample = () => {
           const { latitude, longitude } = position.coords;
           try {
             const response = await fetch(`http://localhost:8000/?data1=${longitude}&data2=${latitude}`);
+            console.log(response)
+            setLocation(response)
             if (!response.ok) {
               throw new Error('Failed to fetch location data');
             }
