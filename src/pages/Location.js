@@ -14,7 +14,7 @@ const LocationExample = () => {
 
   const getLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
+      navigator.geolocation.watchPosition(
         (position) => {
           setLocation(position.coords);
           setError(null);
@@ -22,6 +22,11 @@ const LocationExample = () => {
         (error) => {
           setError(error.message);
           setLocation(null);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
         }
       );
     } else {
@@ -32,9 +37,7 @@ const LocationExample = () => {
   return (
     <Container className="App">
       <h1>Current Location Finder</h1>
-      <p>
-        Click the button below to get your current location:
-      </p>
+      <p>Click the button below to get your current location:</p>
       <button onClick={getLocation}>Get Current Location</button>
 
       {error && <p>Error: {error}</p>}
@@ -49,9 +52,8 @@ const LocationExample = () => {
   );
 };
 
-
 const Location = () => {
-  return <Layout Content={<LocationExample/>} />
-}
+  return <Layout Content={<LocationExample />} />;
+};
 
 export default Location;
