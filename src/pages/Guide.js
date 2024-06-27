@@ -5,7 +5,7 @@ import Layout from "../components/Layout";
 const Container = styled.div`
   width: 100%;
   height: 82dvh;
-  background-color: green;
+  background-color: lightsalmon;
 `;
 
 const GuideContent = () => {

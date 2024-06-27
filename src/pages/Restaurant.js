@@ -1,8 +1,6 @@
-import React from "react";
+import React, { useEffect } from 'react';
 import styled from "styled-components";
-import keyframes from "styled-components";
 import Layout from "../components/Layout";
-import Main from "../components/Main";
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -12,7 +10,6 @@ const Container = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: red;
   }
 
   @media (max-width: 768px) {
@@ -28,14 +25,33 @@ const Container = styled.div`
 `;
 
 const RestaurantContent = () => {
+  
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
+    document.head.appendChild(script);
+    
+    script.onload = () => {
+      window.kakao.maps.load(() => {
+        const container = document.getElementById('map');
+        const options = {
+          center: new window.kakao.maps.LatLng(33.450701, 126.570667),
+          level: 3,
+        };
+        const map = new window.kakao.maps.Map(container, options);
+      });
+    };
+  }, []);
+  
   return (
     <Container>
+      <div id="map" style={{ width: '100%', height: '100%' }}></div>
     </Container>
   );
 };
 
 const Restaurant = () => {
-  return <Main Content={<RestaurantContent />} />
-}
+  return <Layout Content={<RestaurantContent />} />;
+};
 
 export default Restaurant;

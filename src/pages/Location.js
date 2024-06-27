@@ -1,37 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-
-const Container = styled.div`
-  width: 100%;
-  height: 100vh;
-  background-color: salmon;
-`;
+import Layout from '../components/Layout';
 
 const LocationExample = () => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
+  const [xCoordinate, setXCoordinate] = useState()
+  const [yCoordinate, setYCoordinate] = useState()
 
   const getLocation = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          try {
-            const response = await fetch(`http://localhost:8000/?data1=${longitude}&data2=${latitude}`);
-            if (!response.ok) {
-              throw new Error('Failed to fetch location data');
-            }
-            const data = await response.json();
-            setLocation(data); // 데이터를 setLocation으로 설정
-            setError(null);
-          } catch (error) {
-            setError(error.message);
-            setLocation(null);
-          }
+      navigator.geolocation.watchPosition(
+        (position) => {
+          setLocation(position.coords);
+          setError(null);
         },
         (error) => {
           setError(error.message);
           setLocation(null);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 27000,
+          maximumAge: 30000,
         }
       );
     } else {
@@ -39,23 +30,25 @@ const LocationExample = () => {
     }
   };
 
-  return (
-    <Container>
-      <h1>Current Location Finder</h1>
-      <p>Click the button below to get your current location:</p>
-      <button onClick={getLocation}>Get Current Location</button>
+  useEffect(() => {
+    getLocation();
+  }, []); // 빈 배열을 전달하여 컴포넌트가 마운트될 때 한 번만 실행되도록 합니다.
 
+  return (
+    <>
       {error && <p>Error: {error}</p>}
       {location && (
         <div>
-          <h2>Your Location:</h2>
-          <p>Address: {location.address}</p>
           <p>Latitude: {location.latitude}</p>
           <p>Longitude: {location.longitude}</p>
         </div>
       )}
-    </Container>
+    </>
   );
 };
 
-export default LocationExample;
+const Location = () => {
+  return <Layout Content={<LocationExample />} />;
+};
+
+export default Location;
