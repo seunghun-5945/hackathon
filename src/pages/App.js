@@ -133,7 +133,7 @@ const AppContent = () => {
         <h1>Any Where</h1>
         <h2>Any Time</h2>
         <h3>when you want</h3>
-        <Link to="/Guide" style={LinkStyle}><span>Get Started</span></Link>
+        <Link to="/Restaurant" style={LinkStyle}><span>Get Started</span></Link>
       </TextArea>
     </Container>
   );
