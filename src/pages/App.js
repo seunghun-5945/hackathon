@@ -81,7 +81,6 @@ const Container = styled.div`
       position: absolute;
       top: 50px;
       right: 20px;
-      left: 100dw;
       text-align: right; 
 
       h1 {
@@ -129,7 +128,6 @@ const AppContent = () => {
         <source src={'./videos/cottonbroStudio.mp4'} type='video/mp4' />
       </StyledVideo>
       <TextArea>
-        <div class="test"></div>
         <h1>Any Where</h1>
         <h2>Any Time</h2>
         <h3>when you want</h3>

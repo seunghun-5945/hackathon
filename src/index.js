@@ -8,6 +8,7 @@ import Restauraunt from './pages/Restaurant';
 import Guide from './pages/Guide';
 import Location from './pages/Location';
 import Restaurant from './pages/Restaurant';
+import i18n from './components/i18n';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
