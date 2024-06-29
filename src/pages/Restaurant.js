@@ -158,6 +158,7 @@ const RestaurantContent = () => {
           });
           kakaoMarker.setMap(map);
         });
+        console.log(response.data);
       }
 
       // 관광지 마커 표시
@@ -167,7 +168,7 @@ const RestaurantContent = () => {
             x: locationData.longitude,
             y: locationData.latitude,
             distan: 1000,
-            keyword: "관광지",
+            keyword: "은행",
           },
         });
 
