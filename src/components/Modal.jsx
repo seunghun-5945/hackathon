@@ -53,6 +53,7 @@ const StyledButton = styled.button`
   background-color: #7c98fc;
   color: white;
   font-size: 20px;
+  cursor: pointer;
 `;
 
 const Modal = ({ closeModal }) => {
@@ -60,7 +61,7 @@ const Modal = ({ closeModal }) => {
     <Container>
       <Header>위치설정</Header>
       <Main>
-        <StyledButton style={{width: "150px",}}>자동설정</StyledButton>
+        <StyledButton style={{width: "150px"}}>자동설정</StyledButton>
       </Main>
       <Footer onClick={closeModal}>
         <h4>닫기</h4>

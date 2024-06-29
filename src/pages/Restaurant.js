@@ -68,7 +68,7 @@ const RestaurantContent = () => {
   
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
+    script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";  // api 키 값인데 나중에 숨겨야함
     document.head.appendChild(script);
     
     script.onload = () => {
@@ -79,6 +79,10 @@ const RestaurantContent = () => {
           level: 3,
         };
         const map = new window.kakao.maps.Map(container, options);
+
+        // 3D 지도 타입 설정
+        map.setMapTypeId(window.kakao.maps.MapTypeId.HYBRID);
+
       });
     };
   }, []);
