@@ -95,8 +95,8 @@ const RestaurantContent = () => {
       try {
         const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
           "data": {
-            "x": locationResult?.latitude,
-            "y": locationResult?.longitude,
+            "x": locationResult?.longitude,
+            "y": locationResult?.latitude,
             "distan": 1000,
             "keyword": "맛집"
           }
@@ -108,7 +108,7 @@ const RestaurantContent = () => {
       }
     }
     fetchData();
-  });
+  }, [[locationResult]]);
 
   const openSettingModal = () => {
     setModalState(!modalState);

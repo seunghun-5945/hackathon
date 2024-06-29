@@ -69,11 +69,11 @@ const Modal = ({ closeModal }) => {
           navigator.geolocation.getCurrentPosition(
             (position) => {
               const { latitude, longitude } = position.coords;
-              setLocation({ latitude, longitude });
+              setLocation({ longitude, latitude });
               setError(null);
               console.log(latitude);
               console.log(longitude);
-              navigate("/restaurant", { state: { latitude, longitude } });
+              navigate("/restaurant", { state: { longitude, latitude } });
             },
             (error) => {
               setError(error.message);
