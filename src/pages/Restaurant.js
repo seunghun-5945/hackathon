@@ -67,7 +67,6 @@ const RestaurantContent = () => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
   const [modalState, setModalState] = useState(false);
-  const [markers, setMarkers] = useState([]);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -109,10 +108,16 @@ const RestaurantContent = () => {
           // 3D 지도 타입 설정
           map.setMapTypeId(window.kakao.maps.MapTypeId.NORMAL);
 
-          // 사용자의 현재 위치에 마커를 표시
+          // 커스텀 마커 이미지 설정
+          const markerImageSrc = "../images/myMarker.png";  // 커스텀 마커 이미지 위치
+          const markerImageSize = new window.kakao.maps.Size(25, 40);  // 마커 이미지의 크기
+          const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, markerImageSize);
+
+          // 사용자의 현재 위치에 커스텀 마커를 표시
           const markerPosition = new window.kakao.maps.LatLng(location.latitude, location.longitude);
           const marker = new window.kakao.maps.Marker({
-            position: markerPosition
+            position: markerPosition,
+            image: markerImage // 커스텀 마커 이미지 적용
           });
           marker.setMap(map);
 
@@ -140,7 +145,6 @@ const RestaurantContent = () => {
         };
       });
 
-      setMarkers(newMarkers);
 
       // 마커를 맵에 추가
       newMarkers.forEach(marker => {
