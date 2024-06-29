@@ -6,6 +6,7 @@ import { VscSettings } from "react-icons/vsc";
 import SettingModal from '../components/SettingModal';
 import Layout from "../components/Layout";
 import Modal from '../components/Modal';
+import axios from 'axios';
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -88,6 +89,26 @@ const RestaurantContent = () => {
       });
     };
   }, [locationResult]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
+          "data": {
+            "x": locationResult?.latitude,
+            "y": locationResult?.longitude,
+            "distan": 1000,
+            "keyword": "맛집"
+          }
+        })
+        console.log(response.data);
+      }
+      catch(error) {
+        console.log(error);
+      }
+    }
+    fetchData();
+  });
 
   const openSettingModal = () => {
     setModalState(!modalState);
