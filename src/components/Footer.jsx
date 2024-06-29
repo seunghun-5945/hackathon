@@ -5,7 +5,6 @@ import { FaLocationDot } from "react-icons/fa6";
 import { IoRestaurant } from "react-icons/io5";
 import { IoMdHelp } from "react-icons/io";
 import { Link } from "react-router-dom";
-import Modal from "./Modal";
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -19,7 +18,7 @@ const Container = styled.div`
 
   @media (max-width: 768px) {
     width: 100%;
-    height: 15dvh;
+    height: 0dvh;
     display: flex;
     border-top: 3px solid lightgray;
     align-items: center;
@@ -49,29 +48,22 @@ const MenuBox = styled(Link)`
 `;
 
 const Footer = () => {
-  
-  const [modalState, setModalState] = useState(false)
-  const openModal = () => {
-    setModalState(!modalState);
-    console.log(modalState);
-  }
 
   return (
     <Container>
-      {modalState && <Modal closeModal={() => setModalState(false)} />}
       <MenuBox to="/">
         <MdLanguage />
         <h5>언어설정</h5>
       </MenuBox>
       
-      <MenuBox onClick={openModal}>
+      <MenuBox>
         <FaLocationDot />
         <h5>위치설정</h5>
       </MenuBox>
       
       <MenuBox to="/restaurant">
         <IoRestaurant />
-        <h5>맛집</h5>
+        <h5>지도</h5>
       </MenuBox>
 
       <MenuBox to="/guide">

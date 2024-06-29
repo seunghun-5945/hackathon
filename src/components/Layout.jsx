@@ -8,7 +8,6 @@ const Layout = ( {Content} ) => {
     <>
       <Header/>
         <Main Content={Content}/>
-      <Footer/>
     </>
   )
 }

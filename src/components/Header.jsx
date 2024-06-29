@@ -86,7 +86,7 @@ const slideClose = keyframes`
 const MenuContainer = styled.div`
   @media (max-width: 768px) {
     width: 60%;
-    height: 77dvh;
+    height: 92dvh;
     display: flex;
     flex-direction: column;
     right: 0px;
@@ -105,7 +105,7 @@ const MenuFrame = styled.div`
   }
 `;
 
-const MenuItem = styled.div`
+const MenuItem = styled(Link)`
   width: 100%;
   height: 8dvh;
   display: flex;
@@ -113,6 +113,7 @@ const MenuItem = styled.div`
   justify-content: center;
   border-bottom: 1px solid white;
   color: white;
+  text-decoration: none;
   &:hover {
     background-color: white;
     color: black;
@@ -133,10 +134,11 @@ const MenuFootFrame = styled.div`
 `;
 
 const Menu = ({ openMenu, onAnimationEnd }) => {
+
   return (
     <MenuContainer openMenu={openMenu} onAnimationEnd={onAnimationEnd}>
       <MenuFrame>
-        <MenuItem>
+        <MenuItem to="/guide">
           <h3>어플 사용 가이드</h3>
         </MenuItem>
         <MenuItem>
@@ -147,6 +149,9 @@ const Menu = ({ openMenu, onAnimationEnd }) => {
         </MenuItem>
         <MenuItem>
           <h3>개발자 소개</h3>
+        </MenuItem>
+        <MenuItem to="/restaurant">
+          <h3>지도로 탐색</h3>
         </MenuItem>
       </MenuFrame>
       <MenuFootFrame>

@@ -15,17 +15,16 @@ const Container = styled.div`
 
   @media (max-width: 768px) {
     width: 100%;
-    height: 77dvh;
+    height: 92dvh;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     color: white;
+    overflow-y: hidden;
   }
 `;
-
-
 
 const Main = ( {Content} ) => {
   return (

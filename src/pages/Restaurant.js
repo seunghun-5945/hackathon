@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import styled from "styled-components";
 import { FaMicrophone } from "react-icons/fa";
 import { VscSettings } from "react-icons/vsc";
 import SettingModal from '../components/SettingModal';
 import Layout from "../components/Layout";
-import Modal from '../components/Modal';
 import axios from 'axios';
 
 const Container = styled.div`
@@ -20,7 +19,7 @@ const Container = styled.div`
 
   @media (max-width: 768px) {
     width: 100%;
-    height: 82dvh;
+    height: 92dvh;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -67,52 +66,105 @@ const MenuButton = styled.button`
 
 const RestaurantContent = () => {
   const { state } = useLocation();
-  const [locationResult, setLocationResult] = useState(state);
+  const [locationResult, setLocationResult] = useState(state || {});
   const [modalState, setModalState] = useState(false);
+  const [markers, setMarkers] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";  // api 키 값인데 나중에 숨겨야함
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+        if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              setLocationResult({ latitude, longitude });
+              setError(null);
+            },
+            (error) => {
+              setError(error.message);
+              setLocationResult({});
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 27000,
+              maximumAge: 30000,
+            }
+          );
+        } else {
+          setError('권한이 거부되었습니다.');
+        }
+      }).catch((error) => {
+        console.error('Permission query failed:', error);
+      });
+    } else {
+      setError('Geolocation API가 지원되지 않습니다.');
+    }
+  }, []);
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
     document.head.appendChild(script);
 
     script.onload = () => {
       window.kakao.maps.load(() => {
-        const container = document.getElementById('map');
+        const container = document.getElementById("map");
         const options = {
-          center: new window.kakao.maps.LatLng(locationResult?.latitude,locationResult?.longitude),
+          center: new window.kakao.maps.LatLng(locationResult?.latitude, locationResult?.longitude),
           level: 3,
         };
         const map = new window.kakao.maps.Map(container, options);
 
-        // 3D 지도 타입 설정
-        map.setMapTypeId(window.kakao.maps.MapTypeId.NORMAL);
+        // 사용자의 현재 위치에 마커를 표시
+        const markerPosition = new window.kakao.maps.LatLng(locationResult?.latitude, locationResult?.longitude);
+        const marker = new window.kakao.maps.Marker({
+          position: markerPosition
+        });
+        marker.setMap(map);
+
+        fetchDataAndDisplayMarkers(map, locationResult);
       });
     };
   }, [locationResult]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
-          "data": {
-            "x": locationResult?.longitude,
-            "y": locationResult?.latitude,
-            "distan": 1000,
-            "keyword": "맛집"
-          }
-        })
-        console.log(response.data);
-      }
-      catch(error) {
-        console.log(error);
-      }
+  const fetchDataAndDisplayMarkers = async (map, locationData) => {
+    try {
+      const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
+        data: {
+          x: locationData?.longitude,
+          y: locationData?.latitude,
+          distan: 1000,
+          keyword: "맛집",
+        },
+      });
+
+      const newMarkers = response.data.keywordinfo.category_name.map((x, index) => {
+        return {
+          x: response.data.keywordinfo.x[index],
+          y: response.data.keywordinfo.y[index],
+        };
+      });
+
+      setMarkers(newMarkers);
+
+      // 마커를 맵에 추가
+      newMarkers.forEach(marker => {
+        const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
+        const kakaoMarker = new window.kakao.maps.Marker({
+          position: markerPosition
+        });
+        kakaoMarker.setMap(map);
+      });
+
+    } catch (error) {
+      console.error("데이터 가져오기 오류:", error);
     }
-    fetchData();
-  }, [[locationResult]]);
+  };
 
   const openSettingModal = () => {
     setModalState(!modalState);
-  }
+  };
 
   return (
     <Container>
@@ -120,7 +172,7 @@ const RestaurantContent = () => {
       <MenuButton onClick={openSettingModal}>
         <VscSettings />
       </MenuButton>
-      <div id="map" style={{ width: '100%', height: '100%', zIndex: 1 }}></div>
+      <div id="map" style={{ width: "100%", height: "100%", zIndex: 1 }}></div>
       <StyledButton>
         <FaMicrophone />
       </StyledButton>
