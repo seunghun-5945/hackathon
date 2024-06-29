@@ -67,6 +67,9 @@ const RestaurantContent = () => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
   const [modalState, setModalState] = useState(false);
+  const [isRestaurantActive, setIsRestaurantActive] = useState(false);
+  const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);
+  const [isRestroomActive, setIsRestroomActive] = useState(false);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -125,35 +128,69 @@ const RestaurantContent = () => {
         });
       };
     }
-  }, [location]);
+  }, [location, isRestaurantActive, isTouristSpotActive]);
 
   const fetchDataAndDisplayMarkers = async (map, locationData) => {
     try {
-      const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
-        data: {
-          x: locationData.longitude,
-          y: locationData.latitude,
-          distan: 1000,
-          keyword: "맛집",
-        },
-      });
-
-      const newMarkers = response.data.keywordinfo.category_name.map((x, index) => {
-        return {
-          x: response.data.keywordinfo.x[index],
-          y: response.data.keywordinfo.y[index],
-        };
-      });
-
-
-      // 마커를 맵에 추가
-      newMarkers.forEach(marker => {
-        const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
-        const kakaoMarker = new window.kakao.maps.Marker({
-          position: markerPosition
+      // 맛집 마커 표시
+      if (isRestaurantActive) {
+        const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
+          data: {
+            x: locationData.longitude,
+            y: locationData.latitude,
+            distan: 1000,
+            keyword: "맛집",
+          },
         });
-        kakaoMarker.setMap(map);
-      });
+
+        const newMarkers = response.data.keywordinfo.category_name.map((x, index) => {
+          return {
+            x: response.data.keywordinfo.x[index],
+            y: response.data.keywordinfo.y[index],
+          };
+        });
+
+        // 마커를 맵에 추가
+        newMarkers.forEach(marker => {
+          const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
+          const kakaoMarker = new window.kakao.maps.Marker({
+            position: markerPosition
+          });
+          kakaoMarker.setMap(map);
+        });
+      }
+
+      // 관광지 마커 표시
+      if (isTouristSpotActive) {
+        const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
+          data: {
+            x: locationData.longitude,
+            y: locationData.latitude,
+            distan: 1000,
+            keyword: "관광지",
+          },
+        });
+
+        const newMarkers = response.data.keywordinfo.category_name.map((x, index) => {
+          return {
+            x: response.data.keywordinfo.x[index],
+            y: response.data.keywordinfo.y[index],
+          };
+        });
+
+        // 마커를 맵에 추가
+        newMarkers.forEach(marker => {
+          const markerImageSrc = "../images/tourMarker.png";  // 커스텀 마커 이미지 위치
+          const markerImageSize = new window.kakao.maps.Size(25, 40);  // 마커 이미지의 크기
+          const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, markerImageSize);
+          const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
+          const tourmarker = new window.kakao.maps.Marker({
+            position: markerPosition,
+            image: markerImage // 커스텀 마커 이미지 적용
+          });
+          tourmarker.setMap(map);
+        });
+      }
 
     } catch (error) {
       console.error("데이터 가져오기 오류:", error);
@@ -164,9 +201,24 @@ const RestaurantContent = () => {
     setModalState(!modalState);
   };
 
+  const handleSettingComplete = ({ restaurant, touristSpot, restroom }) => {
+    setIsRestaurantActive(restaurant);
+    setIsTouristSpotActive(touristSpot);
+    setIsRestroomActive(restroom);
+    setModalState(false);
+  };
+
   return (
     <Container>
-      {modalState && <SettingModal closeModal={() => setModalState(false)} />}
+      {modalState && (
+        <SettingModal
+          closeModal={() => setModalState(false)}
+          isRestaurantActive={isRestaurantActive}
+          isTouristSpotActive={isTouristSpotActive}
+          isRestroomActive={isRestroomActive}
+          onComplete={handleSettingComplete}
+        />
+      )}
       <MenuButton onClick={openSettingModal}>
         <VscSettings />
       </MenuButton>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import ToggleSwitch from "../components/ToggleSwitch";
 import { FaStreetView } from "react-icons/fa";
@@ -10,6 +10,7 @@ const ModalContainer = styled.div`
   height: 400px;
   position: absolute;
   border-radius: 15px;
+  border: 1px solid #eeeeee;
   background-color: white;
   z-index: 500;
 `;
@@ -88,13 +89,23 @@ const ModalFooter = styled.div`
   cursor: pointer;
 `;
 
-const SettingModal = ({ closeModal }) => {
-  const [isRestaurantActive, setIsRestaurantActive] = useState(false);
-  const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);
-  const [isRestroomActive, setIsRestroomActive] = useState(false);
+const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isRestroomActive, onComplete }) => {
+  const [restaurant, setRestaurant] = useState(isRestaurantActive);
+  const [touristSpot, setTouristSpot] = useState(isTouristSpotActive);
+  const [restroom, setRestroom] = useState(isRestroomActive);
 
   const toggleSwitch = (setActive) => {
     setActive((prev) => !prev);
+  };
+
+  useEffect(() => {
+    setRestaurant(isRestaurantActive);
+    setTouristSpot(isTouristSpotActive);
+    setRestroom(isRestroomActive);
+  }, [isRestaurantActive, isTouristSpotActive, isRestroomActive]);
+
+  const handleSaveSettings = () => {
+    onComplete({ restaurant, touristSpot, restroom });
   };
 
   return (
@@ -122,27 +133,27 @@ const SettingModal = ({ closeModal }) => {
           <RowArea>
             <h6>맛집</h6>
             <ToggleSwitch
-              isActive={isRestaurantActive}
-              onClick={() => toggleSwitch(setIsRestaurantActive)}
+              isActive={restaurant}
+              onClick={() => toggleSwitch(setRestaurant)}
             />
           </RowArea>
           <RowArea>
             <h6>관광지</h6>
             <ToggleSwitch
-              isActive={isTouristSpotActive}
-              onClick={() => toggleSwitch(setIsTouristSpotActive)}
+              isActive={touristSpot}
+              onClick={() => toggleSwitch(setTouristSpot)}
             />
           </RowArea>
           <RowArea>
             <h6>대중교통</h6>
             <ToggleSwitch
-              isActive={isRestroomActive}
-              onClick={() => toggleSwitch(setIsRestroomActive)}
+              isActive={restroom}
+              onClick={() => toggleSwitch(setRestroom)}
             />
           </RowArea>
         </ModalMainBottom>
       </ModalMain>
-      <ModalFooter onClick={closeModal}>
+      <ModalFooter onClick={handleSaveSettings}>
         <h3>설정완료</h3>
       </ModalFooter>
     </ModalContainer>

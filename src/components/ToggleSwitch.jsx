@@ -29,7 +29,7 @@ const Container = styled.div`
   position: relative;
   cursor: pointer;
   background-color: ${({ isActive }) => (isActive ? "lightgreen" : "lightgray")};
-  animation: ${({ isActive }) => (isActive ? changeColorLeft : changeColorRight)} 0.3s forwards;
+  animation: ${({ isActive }) => (isActive ? changeColorRight : changeColorLeft)} 0.3s forwards;
 `;
 
 const Frame = styled.div`
@@ -65,7 +65,7 @@ const ToggleBtn = styled.div`
   position: absolute;
   border-radius: 50%;
   background-color: white;
-  animation: ${({ isActive }) => (isActive ? moveRight : moveLeft)} 0.3s forwards;
+  animation: ${({ isActive }) => (isActive ? moveLeft : moveRight)} 0.3s forwards;
 `;
 
 const ToggleSwitch = ({ isActive, onClick }) => {
