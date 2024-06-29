@@ -1,6 +1,7 @@
 import React from "react";
 import styled, { keyframes } from "styled-components";
 
+
 const Container = styled.div`
   @media (min-width: 1920px) {
     min-width: 100%;
@@ -23,6 +24,8 @@ const Container = styled.div`
     color: white;
   }
 `;
+
+
 
 const Main = ( {Content} ) => {
   return (

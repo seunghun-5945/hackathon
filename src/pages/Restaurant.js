@@ -1,6 +1,9 @@
-import React, { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled from "styled-components";
 import Layout from "../components/Layout";
+import { FaMicrophone } from "react-icons/fa";
+import { VscSettings } from "react-icons/vsc";
+import SettingModal from '../components/SettingModal';
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -24,7 +27,44 @@ const Container = styled.div`
   }
 `;
 
+const StyledButton = styled.button`
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  bottom: 0;
+  border: 2px solid black;
+  border-radius: 50%;
+  background-color: white;
+  position: absolute;
+  font-size: 30px;
+  z-index: 50;
+  cursor: pointer;
+  color: black;
+  margin-bottom: 20px;
+`;
+
+const MenuButton = styled.button`
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0);
+  border: none;
+  cursor: pointer;
+  top: 20px;
+  left: 10px;
+  z-index: 50;
+  font-size: 50px;
+  color: black;
+`;
+
 const RestaurantContent = () => {
+  
+  const [modalState, setModalState] = useState(false)
   
   useEffect(() => {
     const script = document.createElement('script');
@@ -43,9 +83,23 @@ const RestaurantContent = () => {
     };
   }, []);
   
+  const openSettingModal = () => {
+    return (
+      setModalState(!modalState),
+      console.log(modalState)
+    )
+  }
+
   return (
     <Container>
-      <div id="map" style={{ width: '100%', height: '100%' }}></div>
+      {modalState && <SettingModal closeModal={() => setModalState(false)} />}
+      <MenuButton onClick={openSettingModal}>
+        <VscSettings />
+      </MenuButton>
+      <div id="map" style={{ width: '100%', height: '100%', zIndex: 1 }}></div>
+      <StyledButton>
+        <FaMicrophone />
+      </StyledButton>
     </Container>
   );
 };

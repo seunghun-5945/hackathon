@@ -23,7 +23,7 @@ const Container = styled.div`
     align-items: center;
     justify-content: center;
     position: relative;
-    z-index: 2;
+    z-index: 1000;
     background-color: white;
     color: black;
     border-bottom: 3px solid lightgray;
@@ -86,14 +86,14 @@ const slideClose = keyframes`
 const MenuContainer = styled.div`
   @media (max-width: 768px) {
     width: 60%;
-    height: 82dvh;
+    height: 77dvh;
     display: flex;
     flex-direction: column;
     right: 0px;
     background-color: black;
     opacity: 0.6;
     position: absolute;
-    z-index: 1;
+    z-index: 1000;
     animation: ${({ openMenu }) => (openMenu ? slideOpen : slideClose)} 0.8s ease forwards;
   }
 `;
