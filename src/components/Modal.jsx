@@ -1,4 +1,5 @@
-import React from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
 const Container = styled.div`
@@ -46,7 +47,7 @@ const Footer = styled.div`
 `;
 
 const StyledButton = styled.button`
-  width: 100px;
+  width: 150px;
   height: 50px;
   border: none;
   border-radius: 10px;
@@ -57,11 +58,50 @@ const StyledButton = styled.button`
 `;
 
 const Modal = ({ closeModal }) => {
+  const navigate = useNavigate(); // 최상위 레벨에서 useNavigate 사용
+  const [location, setLocation] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleButtonClick = () => {
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
+        if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              setLocation({ latitude, longitude });
+              setError(null);
+              console.log(latitude);
+              console.log(longitude);
+              navigate("/restaurant", { state: { latitude, longitude } });
+            },
+            (error) => {
+              setError(error.message);
+              setLocation(null);
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 27000,
+              maximumAge: 30000,
+            }
+          );
+        } else {
+          setError('권한이 거부되었습니다.');
+        }
+      }).catch((error) => {
+        console.error('Permission query failed:', error);
+      });
+    } else {
+      setError('Geolocation API가 지원되지 않습니다.');
+    }
+  };
+  
+
   return (
     <Container>
       <Header>위치설정</Header>
       <Main>
-        <StyledButton style={{width: "150px"}}>자동설정</StyledButton>
+        <StyledButton onClick={handleButtonClick}>자동설정</StyledButton>
       </Main>
       <Footer onClick={closeModal}>
         <h4>닫기</h4>

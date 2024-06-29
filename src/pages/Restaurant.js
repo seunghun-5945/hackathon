@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import styled from "styled-components";
-import Layout from "../components/Layout";
 import { FaMicrophone } from "react-icons/fa";
 import { VscSettings } from "react-icons/vsc";
 import SettingModal from '../components/SettingModal';
+import Layout from "../components/Layout";
+import Modal from '../components/Modal';
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -63,35 +65,32 @@ const MenuButton = styled.button`
 `;
 
 const RestaurantContent = () => {
-  
-  const [modalState, setModalState] = useState(false)
-  
+  const { state } = useLocation();
+  const [locationResult, setLocationResult] = useState(state);
+  const [modalState, setModalState] = useState(false);
+
   useEffect(() => {
     const script = document.createElement('script');
     script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";  // api 키 값인데 나중에 숨겨야함
     document.head.appendChild(script);
-    
+
     script.onload = () => {
       window.kakao.maps.load(() => {
         const container = document.getElementById('map');
         const options = {
-          center: new window.kakao.maps.LatLng(33.450701, 126.570667),
+          center: new window.kakao.maps.LatLng(locationResult?.latitude,locationResult?.longitude),
           level: 3,
         };
         const map = new window.kakao.maps.Map(container, options);
 
         // 3D 지도 타입 설정
-        map.setMapTypeId(window.kakao.maps.MapTypeId.HYBRID);
-
+        map.setMapTypeId(window.kakao.maps.MapTypeId.ROADVIEW);
       });
     };
-  }, []);
-  
+  }, [locationResult]);
+
   const openSettingModal = () => {
-    return (
-      setModalState(!modalState),
-      console.log(modalState)
-    )
+    setModalState(!modalState);
   }
 
   return (
