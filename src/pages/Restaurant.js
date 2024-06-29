@@ -84,7 +84,7 @@ const RestaurantContent = () => {
         const map = new window.kakao.maps.Map(container, options);
 
         // 3D 지도 타입 설정
-        map.setMapTypeId(window.kakao.maps.MapTypeId.ROADVIEW);
+        map.setMapTypeId(window.kakao.maps.MapTypeId.NORMAL);
       });
     };
   }, [locationResult]);
