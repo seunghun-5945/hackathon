@@ -44,7 +44,7 @@ const ModalMainTop = styled.div`
 
   const MapViewFrame = styled.div`
     width: 30%;
-    height: 100%;
+    height: 80%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -120,21 +120,21 @@ const SettingModal = ({ closeModal }) => {
 
         <ModalMainBottom>
           <RowArea>
-            <h5>맛집</h5>
+            <h6>맛집</h6>
             <ToggleSwitch
               isActive={isRestaurantActive}
               onClick={() => toggleSwitch(setIsRestaurantActive)}
             />
           </RowArea>
           <RowArea>
-            <h5>관광지</h5>
+            <h6>관광지</h6>
             <ToggleSwitch
               isActive={isTouristSpotActive}
               onClick={() => toggleSwitch(setIsTouristSpotActive)}
             />
           </RowArea>
           <RowArea>
-            <h5>공중화장실</h5>
+            <h6>대중교통</h6>
             <ToggleSwitch
               isActive={isRestroomActive}
               onClick={() => toggleSwitch(setIsRestroomActive)}
