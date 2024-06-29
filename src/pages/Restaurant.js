@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import styled from "styled-components";
 import { FaMicrophone } from "react-icons/fa";
 import { VscSettings } from "react-icons/vsc";
@@ -65,75 +64,70 @@ const MenuButton = styled.button`
 `;
 
 const RestaurantContent = () => {
-  const { state } = useLocation();
-  const [locationResult, setLocationResult] = useState(state || {});
+  const [location, setLocation] = useState(null);
+  const [error, setError] = useState(null);
   const [modalState, setModalState] = useState(false);
   const [markers, setMarkers] = useState([]);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    if (navigator.permissions) {
-      navigator.permissions.query({ name: 'geolocation' }).then(permissionStatus => {
-        if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              const { latitude, longitude } = position.coords;
-              setLocationResult({ latitude, longitude });
-              setError(null);
-            },
-            (error) => {
-              setError(error.message);
-              setLocationResult({});
-            },
-            {
-              enableHighAccuracy: true,
-              timeout: 27000,
-              maximumAge: 30000,
-            }
-          );
-        } else {
-          setError('권한이 거부되었습니다.');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocation(position.coords);
+          setError(null);
+        },
+        (error) => {
+          setError(error.message);
+          setLocation(null);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 27000,
+          maximumAge: 30000
         }
-      }).catch((error) => {
-        console.error('Permission query failed:', error);
-      });
+      );
     } else {
-      setError('Geolocation API가 지원되지 않습니다.');
+      setError('Geolocation is not supported by this browser.');
     }
   }, []);
 
   useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
-    document.head.appendChild(script);
+    if (location) {
+      const script = document.createElement("script");
+      script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
+      document.head.appendChild(script);
 
-    script.onload = () => {
-      window.kakao.maps.load(() => {
-        const container = document.getElementById("map");
-        const options = {
-          center: new window.kakao.maps.LatLng(locationResult?.latitude, locationResult?.longitude),
-          level: 3,
-        };
-        const map = new window.kakao.maps.Map(container, options);
+      script.onload = () => {
+        window.kakao.maps.load(() => {
+          const container = document.getElementById("map");
+          const options = {
+            center: new window.kakao.maps.LatLng(location.latitude, location.longitude),
+            level: 3,
+          };
+          const map = new window.kakao.maps.Map(container, options);
 
-        // 사용자의 현재 위치에 마커를 표시
-        const markerPosition = new window.kakao.maps.LatLng(locationResult?.latitude, locationResult?.longitude);
-        const marker = new window.kakao.maps.Marker({
-          position: markerPosition
+          // 3D 지도 타입 설정
+          map.setMapTypeId(window.kakao.maps.MapTypeId.NORMAL);
+
+          // 사용자의 현재 위치에 마커를 표시
+          const markerPosition = new window.kakao.maps.LatLng(location.latitude, location.longitude);
+          const marker = new window.kakao.maps.Marker({
+            position: markerPosition
+          });
+          marker.setMap(map);
+
+          fetchDataAndDisplayMarkers(map, location);
         });
-        marker.setMap(map);
-
-        fetchDataAndDisplayMarkers(map, locationResult);
-      });
-    };
-  }, [locationResult]);
+      };
+    }
+  }, [location]);
 
   const fetchDataAndDisplayMarkers = async (map, locationData) => {
     try {
       const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
         data: {
-          x: locationData?.longitude,
-          y: locationData?.latitude,
+          x: locationData.longitude,
+          y: locationData.latitude,
           distan: 1000,
           keyword: "맛집",
         },
