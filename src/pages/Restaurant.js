@@ -3,8 +3,8 @@ import styled from "styled-components";
 import { FaMicrophone } from "react-icons/fa";
 import { VscSettings } from "react-icons/vsc";
 import SettingModal from '../components/SettingModal';
-import Layout from "../components/Layout";
-import axios from 'axios';
+import Layout from "../components/Layout"; 
+import axios from 'axios';  
 
 const Container = styled.div`
   @media (min-width: 1920px) {
@@ -64,12 +64,15 @@ const MenuButton = styled.button`
 `;
 
 const RestaurantContent = () => {
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(null); //  위치를 저장하고 초기화하는 변수
   const [error, setError] = useState(null);
-  const [modalState, setModalState] = useState(false);
-  const [isRestaurantActive, setIsRestaurantActive] = useState(false);
-  const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);
-  const [isRestroomActive, setIsRestroomActive] = useState(false);
+  const [mapType, setMapTypeId] = useState('');
+  const [modalState, setModalState] = useState(false);  //  모달 상태 변수
+  const [isRestaurantActive, setIsRestaurantActive] = useState(false);  //  모달의 맛집 토글 활성화 되어있나 평가하는 변수
+  const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);  //  모달의 관광지(지금은 은행으로 되어있음) 토글 활성화 되어있나 평가하는 변수
+  const [isRestroomActive, setIsRestroomActive] = useState(false);  //  지금은 사용 안되고 있음
+
+  //  geolocation 으로 페이지가 랜더링 됬을 때 유저의 위치를 불러옴
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -83,9 +86,9 @@ const RestaurantContent = () => {
           setLocation(null);
         },
         {
-          enableHighAccuracy: true,
-          timeout: 27000,
-          maximumAge: 30000
+          enableHighAccuracy: true, //  높은 정확도로 위치를 가져옴
+          timeout: 27000, //  27초동안 정보를 가져오지 못하면 타임아웃 시킴
+          maximumAge: 30000 //  위치 정보를 30초 동안만 보관함 ==> 근데 위치를 state로 저장해서 상관 없을것 같은데
         }
       );
     } else {
@@ -93,10 +96,12 @@ const RestaurantContent = () => {
     }
   }, []);
 
+  //  만약 위치변수에 값이 있다면 지도를 초기화하고 마커를 표시해주는 훅 (걍 카카오 맵이라고 생각하셈)
+
   useEffect(() => {
     if (location) {
       const script = document.createElement("script");
-      script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
+      script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";  //  API 키랑 주소값인데 나중에 숨길게요ㅠㅠ...
       document.head.appendChild(script);
 
       script.onload = () => {
@@ -117,7 +122,7 @@ const RestaurantContent = () => {
           const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, markerImageSize);
 
           // 사용자의 현재 위치에 커스텀 마커를 표시
-          const markerPosition = new window.kakao.maps.LatLng(location.latitude, location.longitude);
+          const markerPosition = new window.kakao.maps.LatLng(location.latitude, location.longitude); //  markerPosition 변수에다가 유저의 현재 위치를 저장
           const marker = new window.kakao.maps.Marker({
             position: markerPosition,
             image: markerImage // 커스텀 마커 이미지 적용

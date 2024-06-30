@@ -52,6 +52,7 @@ const ModalMainTop = styled.div`
     justify-content: space-around;
     color: black;
     font-size: 30px;
+    cursor: pointer;
 
     span {
       font-size: 15px;
@@ -90,6 +91,10 @@ const ModalFooter = styled.div`
 `;
 
 const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isRestroomActive, onComplete }) => {
+  
+  const [streetView, setStreetView] = useState(false);
+  const [satelliteView, setSatelliteView] = useState(false);
+  const [dimensionView, setDimensionView] = useState(false);
   const [restaurant, setRestaurant] = useState(isRestaurantActive);
   const [touristSpot, setTouristSpot] = useState(isTouristSpotActive);
   const [restroom, setRestroom] = useState(isRestroomActive);
@@ -97,6 +102,10 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
   const toggleSwitch = (setActive) => {
     setActive((prev) => !prev);
   };
+
+  useEffect(() => {
+
+  }, [])
 
   useEffect(() => {
     setRestaurant(isRestaurantActive);
@@ -108,6 +117,24 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
     onComplete({ restaurant, touristSpot, restroom });
   };
 
+  const selectStreetView = () => {
+    setStreetView(true);
+    setSatelliteView(false);
+    setDimensionView(false);
+  }
+
+  const selectSatelliteView = () => {
+    setStreetView(false);
+    setSatelliteView(true);
+    setDimensionView(false);
+  }
+
+  const selectDimensionView = () => {
+    setStreetView(false);
+    setSatelliteView(false);
+    setDimensionView(true);
+  }
+
   return (
     <ModalContainer>
       <ModalTop>
@@ -115,15 +142,15 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
       </ModalTop>
       <ModalMain>
         <ModalMainTop>
-          <MapViewFrame>
+        <MapViewFrame onClick={selectStreetView} style={{ color: streetView ? 'blue' : 'black' }}>
             <FaStreetView />
             <span>스트리트 뷰</span>
           </MapViewFrame>
-          <MapViewFrame>
+          <MapViewFrame onClick={selectSatelliteView} style={{ color: satelliteView ? 'blue' : 'black' }}>
             <MdSatelliteAlt />
             <span>위성 뷰</span>
           </MapViewFrame>
-          <MapViewFrame>
+          <MapViewFrame onClick={selectDimensionView} style={{ color: dimensionView ? 'blue' : 'black' }}>
             <MdGpsFixed />
             <span>3D 뷰</span>
           </MapViewFrame>
