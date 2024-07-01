@@ -9,7 +9,6 @@ const ModalContainer = styled.div`
   width: 300px;
   height: 400px;
   position: absolute;
-  border-radius: 15px;
   border: 1px solid #eeeeee;
   background-color: white;
   z-index: 500;
@@ -43,21 +42,21 @@ const ModalMainTop = styled.div`
   border-bottom: 2px solid #eeeeee;
 `;
 
-  const MapViewFrame = styled.div`
-    width: 30%;
-    height: 80%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-around;
-    color: black;
-    font-size: 30px;
-    cursor: pointer;
+const MapViewFrame = styled.div`
+  width: 30%;
+  height: 80%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  color: black;
+  font-size: 30px;
+  cursor: pointer;
 
-    span {
-      font-size: 15px;
-    }
-  `;
+  span {
+    font-size: 15px;
+  }
+`;
 
 const ModalMainBottom = styled.div`
   width: 100%;
@@ -84,13 +83,12 @@ const ModalFooter = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0 0 15px 15px;
-  background-color: lightsalmon;
+  background-color: #4b96f3;
   color: black;
   cursor: pointer;
 `;
 
-const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isRestroomActive, onComplete }) => {
+const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isRestroomActive, onComplete, updateMapType }) => {
   
   const [streetView, setStreetView] = useState(false);
   const [satelliteView, setSatelliteView] = useState(false);
@@ -104,10 +102,6 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
   };
 
   useEffect(() => {
-
-  }, [])
-
-  useEffect(() => {
     setRestaurant(isRestaurantActive);
     setTouristSpot(isTouristSpotActive);
     setRestroom(isRestroomActive);
@@ -115,25 +109,39 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
 
   const handleSaveSettings = () => {
     onComplete({ restaurant, touristSpot, restroom });
+    if (window.kakao && window.kakao.maps && window.kakao.maps.MapTypeId) {
+      const mapTypeId = window.kakao.maps.MapTypeId;
+      if (streetView) {
+        localStorage.setItem("mapType", mapTypeId.ROADMAP);
+        updateMapType(mapTypeId.ROADMAP);
+      } else if (satelliteView) {
+        localStorage.setItem("mapType", mapTypeId.HYBRID);
+        updateMapType(mapTypeId.HYBRID);
+      } else if (dimensionView) {
+        localStorage.setItem("mapType", mapTypeId.SKYVIEW);
+        updateMapType(mapTypeId.SKYVIEW);
+      } 
+    }
+    closeModal();
   };
 
   const selectStreetView = () => {
     setStreetView(true);
     setSatelliteView(false);
     setDimensionView(false);
-  }
+  };
 
   const selectSatelliteView = () => {
     setStreetView(false);
     setSatelliteView(true);
     setDimensionView(false);
-  }
+  };
 
   const selectDimensionView = () => {
     setStreetView(false);
     setSatelliteView(false);
     setDimensionView(true);
-  }
+  };
 
   return (
     <ModalContainer>
@@ -142,7 +150,7 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
       </ModalTop>
       <ModalMain>
         <ModalMainTop>
-        <MapViewFrame onClick={selectStreetView} style={{ color: streetView ? 'blue' : 'black' }}>
+          <MapViewFrame onClick={selectStreetView} style={{ color: streetView ? 'blue' : 'black' }}>
             <FaStreetView />
             <span>스트리트 뷰</span>
           </MapViewFrame>
@@ -155,7 +163,6 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
             <span>3D 뷰</span>
           </MapViewFrame>
         </ModalMainTop>
-
         <ModalMainBottom>
           <RowArea>
             <h6>맛집</h6>

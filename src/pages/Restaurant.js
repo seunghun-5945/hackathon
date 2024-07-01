@@ -64,15 +64,13 @@ const MenuButton = styled.button`
 `;
 
 const RestaurantContent = () => {
-  const [location, setLocation] = useState(null); //  위치를 저장하고 초기화하는 변수
+  const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
-  const [mapType, setMapTypeId] = useState('');
-  const [modalState, setModalState] = useState(false);  //  모달 상태 변수
-  const [isRestaurantActive, setIsRestaurantActive] = useState(false);  //  모달의 맛집 토글 활성화 되어있나 평가하는 변수
-  const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);  //  모달의 관광지(지금은 은행으로 되어있음) 토글 활성화 되어있나 평가하는 변수
-  const [isRestroomActive, setIsRestroomActive] = useState(false);  //  지금은 사용 안되고 있음
-
-  //  geolocation 으로 페이지가 랜더링 됬을 때 유저의 위치를 불러옴
+  const [modalState, setModalState] = useState(false);
+  const [isRestaurantActive, setIsRestaurantActive] = useState(false);
+  const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);
+  const [isRestroomActive, setIsRestroomActive] = useState(false);
+  const [map, setMap] = useState(null); // 맵 객체 상태 추가
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -86,9 +84,9 @@ const RestaurantContent = () => {
           setLocation(null);
         },
         {
-          enableHighAccuracy: true, //  높은 정확도로 위치를 가져옴
-          timeout: 27000, //  27초동안 정보를 가져오지 못하면 타임아웃 시킴
-          maximumAge: 30000 //  위치 정보를 30초 동안만 보관함 ==> 근데 위치를 state로 저장해서 상관 없을것 같은데
+          enableHighAccuracy: true,
+          timeout: 27000,
+          maximumAge: 30000
         }
       );
     } else {
@@ -96,48 +94,61 @@ const RestaurantContent = () => {
     }
   }, []);
 
-  //  만약 위치변수에 값이 있다면 지도를 초기화하고 마커를 표시해주는 훅 (걍 카카오 맵이라고 생각하셈)
-
   useEffect(() => {
-    if (location) {
-      const script = document.createElement("script");
-      script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";  //  API 키랑 주소값인데 나중에 숨길게요ㅠㅠ...
-      document.head.appendChild(script);
+    const loadKakaoMapScript = () => {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Kakao map script loading error'));
+        document.head.appendChild(script);
+      });
+    };
 
-      script.onload = () => {
+    const initializeMap = async () => {
+      try {
+        await loadKakaoMapScript();
         window.kakao.maps.load(() => {
-          const container = document.getElementById("map");
-          const options = {
-            center: new window.kakao.maps.LatLng(location.latitude, location.longitude),
-            level: 3,
-          };
-          const map = new window.kakao.maps.Map(container, options);
+          if (location) {
+            const container = document.getElementById("map");
+            const options = {
+              center: new window.kakao.maps.LatLng(location.latitude, location.longitude),
+              level: 3,
+            };
+            const mapInstance = new window.kakao.maps.Map(container, options);
+            setMap(mapInstance); // 맵 객체 설정
 
-          // 3D 지도 타입 설정
-          map.setMapTypeId(window.kakao.maps.MapTypeId.NORMAL);
+            const savedMapType = localStorage.getItem("mapType");
+            if (savedMapType && window.kakao && window.kakao.maps && window.kakao.maps.MapTypeId) {
+              mapInstance.setMapTypeId(savedMapType);
+            }
 
-          // 커스텀 마커 이미지 설정
-          const markerImageSrc = "../images/myMarker.png";  // 커스텀 마커 이미지 위치
-          const markerImageSize = new window.kakao.maps.Size(25, 40);  // 마커 이미지의 크기
-          const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, markerImageSize);
+            const markerImageSrc = "../images/myMarker.png";
+            const markerImageSize = new window.kakao.maps.Size(25, 40);
+            const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, markerImageSize);
 
-          // 사용자의 현재 위치에 커스텀 마커를 표시
-          const markerPosition = new window.kakao.maps.LatLng(location.latitude, location.longitude); //  markerPosition 변수에다가 유저의 현재 위치를 저장
-          const marker = new window.kakao.maps.Marker({
-            position: markerPosition,
-            image: markerImage // 커스텀 마커 이미지 적용
-          });
-          marker.setMap(map);
+            const markerPosition = new window.kakao.maps.LatLng(location.latitude, location.longitude);
+            const marker = new window.kakao.maps.Marker({
+              position: markerPosition,
+              image: markerImage,
+            });
+            marker.setMap(mapInstance);
 
-          fetchDataAndDisplayMarkers(map, location);
+            fetchDataAndDisplayMarkers(mapInstance, location);
+          }
         });
-      };
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    if (location) {
+      initializeMap();
     }
   }, [location, isRestaurantActive, isTouristSpotActive]);
 
-  const fetchDataAndDisplayMarkers = async (map, locationData) => {
+  const fetchDataAndDisplayMarkers = async (mapInstance, locationData) => {
     try {
-      // 맛집 마커 표시
       if (isRestaurantActive) {
         const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
           data: {
@@ -148,25 +159,23 @@ const RestaurantContent = () => {
           },
         });
 
-        const newMarkers = response.data.keywordinfo.category_name.map((x, index) => {
+        const newMarkers = response.data.keywordinfo.category_name.map((_, index) => {
           return {
             x: response.data.keywordinfo.x[index],
             y: response.data.keywordinfo.y[index],
           };
         });
 
-        // 마커를 맵에 추가
         newMarkers.forEach(marker => {
           const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
           const kakaoMarker = new window.kakao.maps.Marker({
             position: markerPosition
           });
-          kakaoMarker.setMap(map);
+          kakaoMarker.setMap(mapInstance);
         });
         console.log(response.data);
       }
 
-      // 관광지 마커 표시
       if (isTouristSpotActive) {
         const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
           data: {
@@ -177,27 +186,25 @@ const RestaurantContent = () => {
           },
         });
 
-        const newMarkers = response.data.keywordinfo.category_name.map((x, index) => {
+        const newMarkers = response.data.keywordinfo.category_name.map((_, index) => {
           return {
             x: response.data.keywordinfo.x[index],
             y: response.data.keywordinfo.y[index],
           };
         });
 
-        // 마커를 맵에 추가
         newMarkers.forEach(marker => {
-          const markerImageSrc = "../images/tourMarker.png";  // 커스텀 마커 이미지 위치
-          const markerImageSize = new window.kakao.maps.Size(25, 40);  // 마커 이미지의 크기
+          const markerImageSrc = "../images/tourMarker.png";
+          const markerImageSize = new window.kakao.maps.Size(25, 40);
           const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, markerImageSize);
           const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
           const tourmarker = new window.kakao.maps.Marker({
             position: markerPosition,
-            image: markerImage // 커스텀 마커 이미지 적용
+            image: markerImage
           });
-          tourmarker.setMap(map);
+          tourmarker.setMap(mapInstance);
         });
       }
-
     } catch (error) {
       console.error("데이터 가져오기 오류:", error);
     }
@@ -214,6 +221,13 @@ const RestaurantContent = () => {
     setModalState(false);
   };
 
+  // Add function to update map type
+  const updateMapType = (mapType) => {
+    if (map && window.kakao && window.kakao.maps && window.kakao.maps.MapTypeId) {
+      map.setMapTypeId(mapType);
+    }
+  };
+
   return (
     <Container>
       {modalState && (
@@ -223,6 +237,7 @@ const RestaurantContent = () => {
           isTouristSpotActive={isTouristSpotActive}
           isRestroomActive={isRestroomActive}
           onComplete={handleSettingComplete}
+          updateMapType={updateMapType} // Pass function to update map type
         />
       )}
       <MenuButton onClick={openSettingModal}>
