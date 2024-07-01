@@ -68,6 +68,8 @@ const MenuButton = styled.button`
   color: black;
 `;
 
+
+
 const RestaurantContent = () => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
@@ -76,8 +78,14 @@ const RestaurantContent = () => {
   const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);
   const [isRestroomActive, setIsRestroomActive] = useState(false);
   const [map, setMap] = useState(null); // 맵 객체 상태 추가
+  const [recognition, setRecognition] = useState(null);
+  const [responseText, setResponseText] = useState('');
+  const [transcript, setTranscript] = useState('');
+
 
   useEffect(() => {
+    
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -151,6 +159,86 @@ const RestaurantContent = () => {
       initializeMap();
     }
   }, [location, isRestaurantActive, isTouristSpotActive]);
+
+  useEffect(() => {
+    const sendTranscriptToBackend = async (text) => {
+      try {
+        console.log('백엔드로 전송할 텍스트:', text);
+        const response = await axiosInstance.post('/request', { question: text }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        console.log('백엔드로부터 받은 응답:', response.data);
+
+        const responseData = typeof response.data === 'string' ? response.data : response.data.answer;
+
+        if (responseData) {
+          setResponseText(responseData);
+          speakText(responseData);
+        } else {
+          console.error('응답 데이터가 올바르지 않습니다:', response.data);
+        }
+      } catch (error) {
+        console.error('백엔드로 텍스트 전송 중 오류 발생:', error);
+      }
+    };
+
+    if (!recognition) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        console.error('이 브라우저는 음성 인식을 지원하지 않습니다.');
+        return;
+      }
+      const newRecognition = new SpeechRecognition();
+      newRecognition.lang = 'ko-KR';
+      newRecognition.onstart = () => {
+        console.log('음성 인식 시작');
+      };
+      newRecognition.onresult = (event) => {
+        const speechToText = event.results[0][0].transcript;
+        console.log('인식된 텍스트:', speechToText);
+        setTranscript(speechToText);
+        sendTranscriptToBackend(speechToText);
+      };
+      newRecognition.onend = () => {
+        console.log('음성 인식 종료');
+      };
+      setRecognition(newRecognition);
+    }
+  }, [recognition]);
+
+  const handleMouseDown = () => {
+    if (recognition) {
+      recognition.start();
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (recognition) {
+      recognition.stop();
+    }
+  };
+
+  const speakText = (text) => {
+    if (!window.speechSynthesis) {
+      console.error('이 브라우저는 음성 합성을 지원하지 않습니다.');
+      return;
+    }
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ko-KR';
+    utterance.onstart = () => {
+      console.log('음성 합성 시작:', text);
+    };
+    utterance.onend = () => {
+      console.log('음성 합성 종료');
+    };
+    utterance.onerror = (event) => {
+      console.error('음성 합성 중 오류 발생:', event.error);
+    };
+    synth.speak(utterance);
+  };
 
   const fetchDataAndDisplayMarkers = async (mapInstance, locationData) => {
     try {
@@ -249,7 +337,9 @@ const RestaurantContent = () => {
         <VscSettings />
       </MenuButton>
       <div id="map" style={{ width: "100%", height: "100%", zIndex: 1 }}></div>
-      <StyledButton>
+      <StyledButton 
+        onMouseDown={handleMouseDown} 
+        onMouseUp={handleMouseUp}>
         <FaMicrophone />
       </StyledButton>
     </Container>
