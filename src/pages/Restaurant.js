@@ -63,6 +63,73 @@ const MenuButton = styled.button`
   color: black;
 `;
 
+// 마커 누르면 뜨는 모달창임
+
+const MarkerModalContainer = styled.div`
+  width: 90%;
+  height: 60%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  border: 1px solid #eeeeee;
+  color: black;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+`;
+
+const MarkerModalTopFrame = styled.div`
+  width: 100%;
+  height: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  border-bottom: 1px solid #eeeeee;
+
+  h4 {
+    color: gray;
+  }
+`;
+
+const MarkerModalMainFrame = styled.div`
+  width: 100%;
+  height: 70%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const MarkerModalBottomFrame = styled.button`
+  width: 100%;
+  height: 10%;
+  background-color: #4b96f3;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+`;
+
+const MarkerModal = ({ placeName, categoryName, closeModal }) => {
+  console.log(placeName, categoryName); // 데이터가 제대로 전달되었는지 콘솔로 확인
+
+  return (
+    <MarkerModalContainer>
+      <MarkerModalTopFrame>
+        <h3>{placeName}</h3>
+        <h4>{categoryName}</h4>
+      </MarkerModalTopFrame>
+      <MarkerModalMainFrame>
+        <h4>리뷰</h4>
+      </MarkerModalMainFrame>
+      <MarkerModalBottomFrame onClick={closeModal}>Close</MarkerModalBottomFrame>
+    </MarkerModalContainer>
+  );
+};
+
 const RestaurantContent = () => {
   const [location, setLocation] = useState(null);
   const [error, setError] = useState(null);
@@ -70,7 +137,8 @@ const RestaurantContent = () => {
   const [isRestaurantActive, setIsRestaurantActive] = useState(false);
   const [isTouristSpotActive, setIsTouristSpotActive] = useState(false);
   const [isRestroomActive, setIsRestroomActive] = useState(false);
-  const [map, setMap] = useState(null); // 맵 객체 상태 추가
+  const [map, setMap] = useState(null);
+  const [selectedPlace, setSelectedPlace] = useState(null);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -116,7 +184,7 @@ const RestaurantContent = () => {
               level: 3,
             };
             const mapInstance = new window.kakao.maps.Map(container, options);
-            setMap(mapInstance); // 맵 객체 설정
+            setMap(mapInstance);
 
             const savedMapType = localStorage.getItem("mapType");
             if (savedMapType && window.kakao && window.kakao.maps && window.kakao.maps.MapTypeId) {
@@ -149,6 +217,24 @@ const RestaurantContent = () => {
 
   const fetchDataAndDisplayMarkers = async (mapInstance, locationData) => {
     try {
+      const createMarker = (markerPosition, markerData, imageSrc = null) => {
+        const markerImage = imageSrc
+          ? new window.kakao.maps.MarkerImage(imageSrc, new window.kakao.maps.Size(25, 40))
+          : null;
+
+        const marker = new window.kakao.maps.Marker({
+          position: markerPosition,
+          image: markerImage,
+        });
+
+        window.kakao.maps.event.addListener(marker, 'click', () => {
+          console.log("Marker clicked:", markerData);
+          setSelectedPlace(markerData);
+        });
+
+        marker.setMap(mapInstance);
+      };
+
       if (isRestaurantActive) {
         const response = await axios.post("https://port-0-socket-test-hkty2alqiwtpix.sel4.cloudtype.app/api/getinfo", {
           data: {
@@ -159,21 +245,22 @@ const RestaurantContent = () => {
           },
         });
 
+        console.log("Restaurant data:", response.data);
+
         const newMarkers = response.data.keywordinfo.category_name.map((_, index) => {
           return {
             x: response.data.keywordinfo.x[index],
             y: response.data.keywordinfo.y[index],
+            place_name: response.data.keywordinfo.place_name[index],
+            category_name: response.data.keywordinfo.category_name[index],
           };
         });
 
         newMarkers.forEach(marker => {
+          const markerImageSrc = "../images/restaurantMarker.png";
           const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
-          const kakaoMarker = new window.kakao.maps.Marker({
-            position: markerPosition
-          });
-          kakaoMarker.setMap(mapInstance);
+          createMarker(markerPosition, marker, markerImageSrc);
         });
-        console.log(response.data);
       }
 
       if (isTouristSpotActive) {
@@ -186,23 +273,21 @@ const RestaurantContent = () => {
           },
         });
 
+        console.log("Tourist spot data:", response.data);
+
         const newMarkers = response.data.keywordinfo.category_name.map((_, index) => {
           return {
             x: response.data.keywordinfo.x[index],
             y: response.data.keywordinfo.y[index],
+            place_name: response.data.keywordinfo.place_name[index],
+            category_name: response.data.keywordinfo.category_name[index],
           };
         });
 
         newMarkers.forEach(marker => {
           const markerImageSrc = "../images/tourMarker.png";
-          const markerImageSize = new window.kakao.maps.Size(25, 40);
-          const markerImage = new window.kakao.maps.MarkerImage(markerImageSrc, markerImageSize);
           const markerPosition = new window.kakao.maps.LatLng(marker.y, marker.x);
-          const tourmarker = new window.kakao.maps.Marker({
-            position: markerPosition,
-            image: markerImage
-          });
-          tourmarker.setMap(mapInstance);
+          createMarker(markerPosition, marker, markerImageSrc);
         });
       }
     } catch (error) {
@@ -221,11 +306,14 @@ const RestaurantContent = () => {
     setModalState(false);
   };
 
-  // Add function to update map type
   const updateMapType = (mapType) => {
     if (map && window.kakao && window.kakao.maps && window.kakao.maps.MapTypeId) {
       map.setMapTypeId(mapType);
     }
+  };
+
+  const closeModal = () => {
+    setSelectedPlace(null);
   };
 
   return (
@@ -237,7 +325,14 @@ const RestaurantContent = () => {
           isTouristSpotActive={isTouristSpotActive}
           isRestroomActive={isRestroomActive}
           onComplete={handleSettingComplete}
-          updateMapType={updateMapType} // Pass function to update map type
+          updateMapType={updateMapType}
+        />
+      )}
+      {selectedPlace && (
+        <MarkerModal 
+          placeName={selectedPlace.place_name} 
+          categoryName={selectedPlace.category_name}
+          closeModal={closeModal} 
         />
       )}
       <MenuButton onClick={openSettingModal}>
