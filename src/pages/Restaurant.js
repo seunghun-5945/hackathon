@@ -120,7 +120,7 @@ const MarkerModalBottomFrame = styled.button`
   text-decoration: none;
 `;
 
-const MarkerModal = ({ placeName, categoryName, closeModal }) => {
+const MarkerModal = ({ placeName, categoryName, review, closeModal }) => {
   console.log(placeName, categoryName); // 데이터가 제대로 전달되었는지 콘솔로 확인
 
   return (
@@ -131,6 +131,7 @@ const MarkerModal = ({ placeName, categoryName, closeModal }) => {
       </MarkerModalTopFrame>
       <MarkerModalMainFrame>
         <h4>리뷰</h4>
+        {review}
       </MarkerModalMainFrame>
       <MarkerModalBottomFrame onClick={closeModal}>Close</MarkerModalBottomFrame>
     </MarkerModalContainer>
@@ -345,6 +346,7 @@ const RestaurantContent = () => {
             y: response.data.keywordinfo.y[index],
             place_name: response.data.keywordinfo.place_name[index],
             category_name: response.data.keywordinfo.category_name[index],
+            review: response.data.keywordinfo.review[index],
           };
         });
 
@@ -373,6 +375,7 @@ const RestaurantContent = () => {
             y: response.data.keywordinfo.y[index],
             place_name: response.data.keywordinfo.place_name[index],
             category_name: response.data.keywordinfo.category_name[index],
+            review: response.data.keywordinfo.review[index],
           };
         });
 
@@ -424,6 +427,7 @@ const RestaurantContent = () => {
         <MarkerModal 
           placeName={selectedPlace.place_name} 
           categoryName={selectedPlace.category_name}
+          review={selectedPlace.review}
           closeModal={closeModal} 
         />
       )}
