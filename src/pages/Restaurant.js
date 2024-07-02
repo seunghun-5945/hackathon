@@ -111,6 +111,8 @@ const MarkerModalBottomFrame = styled.button`
   border: none;
   font-size: 20px;
   cursor: pointer;
+  color: black;
+  text-decoration: none;
 `;
 
 const MarkerModal = ({ placeName, categoryName, closeModal }) => {
