@@ -120,7 +120,7 @@ const MarkerModalBottomFrame = styled.button`
   text-decoration: none;
 `;
 
-const MarkerModal = ({ placeName, categoryName, review, closeModal }) => {
+const MarkerModal = ({ placeName, categoryName, reviews, closeModal }) => {
   console.log(placeName, categoryName); // 데이터가 제대로 전달되었는지 콘솔로 확인
 
   return (
@@ -130,8 +130,7 @@ const MarkerModal = ({ placeName, categoryName, review, closeModal }) => {
         <h4>{categoryName}</h4>
       </MarkerModalTopFrame>
       <MarkerModalMainFrame>
-        <h4>리뷰</h4>
-        {review}
+        {reviews}
       </MarkerModalMainFrame>
       <MarkerModalBottomFrame onClick={closeModal}>Close</MarkerModalBottomFrame>
     </MarkerModalContainer>
@@ -152,8 +151,6 @@ const RestaurantContent = () => {
   const [transcript, setTranscript] = useState('');
 
   useEffect(() => {
-    
-    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -320,9 +317,24 @@ const RestaurantContent = () => {
           image: markerImage,
         });
 
-        window.kakao.maps.event.addListener(marker, 'click', () => {
+        window.kakao.maps.event.addListener(marker, 'click', async () => {
           console.log("Marker clicked:", markerData);
+          
+          // Set the selected place to show the modal
           setSelectedPlace(markerData);
+      
+          // Send the place name to the backend
+          try {
+              const placeName = markerData.place_name; // Get the place name from markerData
+              const response = await axiosInstance.post('/chain', { query: placeName }, {
+                  headers: {
+                      'Content-Type': 'application/json'
+                  }
+              });
+              console.log('백엔드로 전송된 가게 이름:', response.data);
+          } catch (error) {
+              console.error('백엔드로 가게 이름 전송 중 오류 발생:', error);
+          }
         });
 
         marker.setMap(mapInstance);
@@ -346,7 +358,9 @@ const RestaurantContent = () => {
             y: response.data.keywordinfo.y[index],
             place_name: response.data.keywordinfo.place_name[index],
             category_name: response.data.keywordinfo.category_name[index],
-            review: response.data.keywordinfo.review[index],
+            // reviews: response.data.keywordinfo.reviews[index] && response.data.keywordinfo.reviews[index].reviews.length > 0 
+            //          ? response.data.keywordinfo.reviews[index].reviews[2].text 
+            //          : "리뷰가 없습니다.",
           };
         });
 
@@ -368,14 +382,12 @@ const RestaurantContent = () => {
         });
 
         console.log("Tourist spot data:", response.data);
-
         const newMarkers = response.data.keywordinfo.category_name.map((_, index) => {
           return {
             x: response.data.keywordinfo.x[index],
             y: response.data.keywordinfo.y[index],
             place_name: response.data.keywordinfo.place_name[index],
             category_name: response.data.keywordinfo.category_name[index],
-            review: response.data.keywordinfo.review[index],
           };
         });
 
@@ -424,10 +436,10 @@ const RestaurantContent = () => {
         />
       )}
       {selectedPlace && (
-        <MarkerModal 
+        <MarkerModal
           placeName={selectedPlace.place_name} 
           categoryName={selectedPlace.category_name}
-          review={selectedPlace.review}
+          reviews={selectedPlace.reviews}
           closeModal={closeModal} 
         />
       )}
