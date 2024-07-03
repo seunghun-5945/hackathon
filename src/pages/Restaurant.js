@@ -33,6 +33,20 @@ const Container = styled.div`
   }
 `;
 
+const LoadingFrame = styled.div`
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 92dvh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+`;
+
 const StyledButton = styled.button`
   width: 80px;
   height: 80px;
@@ -105,9 +119,39 @@ const MarkerModalMainFrame = styled.div`
   width: 100%;
   height: 70%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  img {
+    width: 60%;
+    height: 60%;
+  }
 `;
+
+  const MarkerModalMainTopFrame = styled.div`
+    width: 100%;
+    height: 60%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+  `;
+
+  const MarkerModalMainMiddleFrame = styled.div`
+    width: 100%;
+    height: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+  `;
+
+  const MarkerModalMainBottomFrame = styled.div`
+    width: 100%;
+    height: 20%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
 
 const MarkerModalBottomFrame = styled.button`
   width: 100%;
@@ -120,18 +164,57 @@ const MarkerModalBottomFrame = styled.button`
   text-decoration: none;
 `;
 
-const MarkerModal = ({ placeName, categoryName, review, closeModal }) => {
+const MarkerModal = ({ placeName, categoryName, 주소, 사진, 전화번호, 와이파이, 주차가능, 예약가능, 영업시간, closeModal }) => {
   console.log(placeName, categoryName); // 데이터가 제대로 전달되었는지 콘솔로 확인
+
+  const wifiReturn = () => {
+    if (와이파이 == "N") {
+      return "X"
+    }
+    else {
+      return "O"
+    }
+  }
+
+  const parkingReturn = () => {
+    if (주차가능 == "N") {
+      return "X"
+    }
+    else {
+      return "O"
+    }
+  }
+
+  const reservReturn = () => {
+    if (예약가능 == "N") {
+      return "X"
+    }
+    else {
+      return "O"
+    }
+  }
+
 
   return (
     <MarkerModalContainer>
       <MarkerModalTopFrame>
         <h3>{placeName}</h3>
         <h4>{categoryName}</h4>
+        <h3>{전화번호}</h3>
       </MarkerModalTopFrame>
       <MarkerModalMainFrame>
-        <h4>리뷰</h4>
-        {review}
+        <MarkerModalMainTopFrame>
+          <img src={사진} />
+          <h4>주소: {주소}</h4>
+        </MarkerModalMainTopFrame>
+        <MarkerModalMainMiddleFrame>
+          <h4>와이파이: {wifiReturn()}</h4>
+          <h4>주차가능: {parkingReturn()}</h4>
+          <h4>예약가능: {reservReturn()}</h4>
+        </MarkerModalMainMiddleFrame>
+        <MarkerModalMainBottomFrame>
+          <h4>영업시간: {영업시간}</h4>
+        </MarkerModalMainBottomFrame>
       </MarkerModalMainFrame>
       <MarkerModalBottomFrame onClick={closeModal}>Close</MarkerModalBottomFrame>
     </MarkerModalContainer>
@@ -152,8 +235,6 @@ const RestaurantContent = () => {
   const [transcript, setTranscript] = useState('');
 
   useEffect(() => {
-    
-    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -339,6 +420,7 @@ const RestaurantContent = () => {
         });
 
         console.log("Restaurant data:", response.data);
+        console.log()
 
         const newMarkers = response.data.keywordinfo.category_name.map((_, index) => {
           return {
@@ -346,7 +428,6 @@ const RestaurantContent = () => {
             y: response.data.keywordinfo.y[index],
             place_name: response.data.keywordinfo.place_name[index],
             category_name: response.data.keywordinfo.category_name[index],
-            review: response.data.keywordinfo.review[index],
           };
         });
 
@@ -363,19 +444,19 @@ const RestaurantContent = () => {
             x: locationData.longitude,
             y: locationData.latitude,
             distan: 1000,
-            keyword: "은행",
+            keyword: "관광지",
           },
         });
 
         console.log("Tourist spot data:", response.data);
-
         const newMarkers = response.data.keywordinfo.category_name.map((_, index) => {
           return {
             x: response.data.keywordinfo.x[index],
             y: response.data.keywordinfo.y[index],
             place_name: response.data.keywordinfo.place_name[index],
             category_name: response.data.keywordinfo.category_name[index],
-            review: response.data.keywordinfo.review[index],
+            사진: response.data.keywordinfo.storeInfo[index].사진,
+            주소: response.data.keywordinfo.storeInfo[index].주소,
           };
         });
 
@@ -424,10 +505,16 @@ const RestaurantContent = () => {
         />
       )}
       {selectedPlace && (
-        <MarkerModal 
+        <MarkerModal
           placeName={selectedPlace.place_name} 
           categoryName={selectedPlace.category_name}
-          review={selectedPlace.review}
+          사진={selectedPlace.사진}
+          주소={selectedPlace.주소}
+          전화번호={selectedPlace.전화번호}
+          와이파이={selectedPlace.와이파이}
+          주차가능={selectedPlace.주차가능}
+          예약가능={selectedPlace.예약가능}
+          영업시간={selectedPlace.영업시간}
           closeModal={closeModal} 
         />
       )}

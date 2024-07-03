@@ -142,10 +142,10 @@ const Menu = ({ openMenu, onAnimationEnd }) => {
           <h3>어플 사용 가이드</h3>
         </MenuItem>
         <MenuItem>
-          <h3>근처 맛집 찾기</h3>
+          <h3>찜 목록</h3>
         </MenuItem>
         <MenuItem>
-          <h3>근처 관광지 찾기</h3>
+          <h3>사용자 맞춤 추천</h3>
         </MenuItem>
         <MenuItem>
           <h3>개발자 소개</h3>

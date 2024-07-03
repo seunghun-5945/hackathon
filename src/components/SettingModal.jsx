@@ -178,13 +178,6 @@ const SettingModal = ({ closeModal, isRestaurantActive, isTouristSpotActive, isR
               onClick={() => toggleSwitch(setTouristSpot)}
             />
           </RowArea>
-          <RowArea>
-            <h6>대중교통</h6>
-            <ToggleSwitch
-              isActive={restroom}
-              onClick={() => toggleSwitch(setRestroom)}
-            />
-          </RowArea>
         </ModalMainBottom>
       </ModalMain>
       <ModalFooter onClick={handleSaveSettings}>
