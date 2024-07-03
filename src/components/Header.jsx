@@ -138,8 +138,11 @@ const Menu = ({ openMenu, onAnimationEnd }) => {
   return (
     <MenuContainer openMenu={openMenu} onAnimationEnd={onAnimationEnd}>
       <MenuFrame>
-        <MenuItem to="/guide">
-          <h3>어플 사용 가이드</h3>
+        <MenuItem to="/SignIn">
+          <h3>로그인 / 회원가입</h3>
+        </MenuItem>
+        <MenuItem to="/restaurant">
+          <h3>지도로 탐색</h3>
         </MenuItem>
         <MenuItem>
           <h3>찜 목록</h3>
@@ -147,11 +150,8 @@ const Menu = ({ openMenu, onAnimationEnd }) => {
         <MenuItem>
           <h3>사용자 맞춤 추천</h3>
         </MenuItem>
-        <MenuItem>
-          <h3>개발자 소개</h3>
-        </MenuItem>
-        <MenuItem to="/restaurant">
-          <h3>지도로 탐색</h3>
+        <MenuItem to="/guide">
+          <h3>어플 사용 가이드</h3>
         </MenuItem>
       </MenuFrame>
       <MenuFootFrame>
