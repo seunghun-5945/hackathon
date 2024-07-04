@@ -401,9 +401,24 @@ const RestaurantContent = () => {
           image: markerImage,
         });
 
-        window.kakao.maps.event.addListener(marker, 'click', () => {
+        window.kakao.maps.event.addListener(marker, 'click', async () => {
           console.log("Marker clicked:", markerData);
+          
+          // Set the selected place to show the modal
           setSelectedPlace(markerData);
+      
+          // Send the place name to the backend
+          try {
+              const placeName = markerData.place_name; // Get the place name from markerData
+              const response = await axiosInstance.post('/chain', { query: placeName }, {
+                  headers: {
+                      'Content-Type': 'application/json'
+                  }
+              });
+              console.log('백엔드로 전송된 가게 이름:', response.data);
+          } catch (error) {
+              console.error('백엔드로 가게 이름 전송 중 오류 발생:', error);
+          }
         });
 
         marker.setMap(mapInstance);
