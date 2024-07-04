@@ -428,6 +428,8 @@ const RestaurantContent = () => {
             y: response.data.keywordinfo.y[index],
             place_name: response.data.keywordinfo.place_name[index],
             category_name: response.data.keywordinfo.category_name[index],
+            사진: response.data.keywordinfo.storeInfo[index].사진,
+            주소: response.data.keywordinfo.storeInfo[index].주소,
           };
         });
 

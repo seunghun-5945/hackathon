@@ -90,8 +90,9 @@ const MenuContainer = styled.div`
     display: flex;
     flex-direction: column;
     right: 0px;
-    background-color: black;
-    opacity: 0.6;
+    background-color: white;
+    color: black;
+    opacity: 0.9;
     position: absolute;
     z-index: 1000;
     animation: ${({ openMenu }) => (openMenu ? slideOpen : slideClose)} 0.8s ease forwards;
@@ -111,7 +112,6 @@ const MenuItem = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid white;
   color: white;
   text-decoration: none;
   &:hover {
@@ -119,6 +119,9 @@ const MenuItem = styled(Link)`
     color: black;
     font-size: 20px;
   }
+    h3 {
+      color: black;
+    }
 `;
 
 const MenuFootFrame = styled.div`
@@ -152,6 +155,9 @@ const Menu = ({ openMenu, onAnimationEnd }) => {
         </MenuItem>
         <MenuItem to="/guide">
           <h3>어플 사용 가이드</h3>
+        </MenuItem>
+        <MenuItem to="/planner">
+          <h3>플래너 짜기</h3>
         </MenuItem>
       </MenuFrame>
       <MenuFootFrame>

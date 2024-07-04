@@ -9,6 +9,7 @@ import Guide from './pages/Guide';
 import Restaurant from './pages/Restaurant';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import Planner from './pages/Planner';
 import i18n from './components/i18n';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -21,6 +22,7 @@ root.render(
         <Route path="Restaurant" element={<Restaurant/>} />
         <Route path="SignIn" element={<SignIn />} />
         <Route path="SignUp"  element={<SignUp />} />
+        <Route path="Planner" element={<Planner/>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
