@@ -10,6 +10,7 @@ import Restaurant from './pages/Restaurant';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Planner from './pages/Planner';
+import CompletePlanner from './pages/CompletePlanner';
 import i18n from './components/i18n';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -23,6 +24,7 @@ root.render(
         <Route path="SignIn" element={<SignIn />} />
         <Route path="SignUp"  element={<SignUp />} />
         <Route path="Planner" element={<Planner/>} />
+        <Route path="CompletePlanner" element={<CompletePlanner/>} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

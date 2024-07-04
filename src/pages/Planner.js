@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from "react";
-import styled from "styled-components";
-import Layout from "../components/Layout";
-import { FcPlanner } from "react-icons/fc";
-import DatePicker from "react-datepicker";
-import { FaPlaneDeparture } from "react-icons/fa";
-import { FaHome } from "react-icons/fa";
-import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
-import "react-datepicker/dist/react-datepicker.css";
+import React, { useState, useEffect, useRef } from 'react';
+import styled from 'styled-components';
+import Layout from '../components/Layout';
+import { FcPlanner } from 'react-icons/fc';
+import DatePicker from 'react-datepicker';
+import { FaPlaneDeparture } from 'react-icons/fa';
+import { FaHome } from 'react-icons/fa';
+import axios from 'axios';
+import Select from 'react-select';
+import 'react-datepicker/dist/react-datepicker.css';
+import { Link } from 'react-router-dom';
 
 const Container = styled.div`
   @media (max-width: 768px) {
@@ -41,6 +43,21 @@ const JoinModalFrame = styled.div`
   }
 `;
 
+const ButtonArea = styled.div`
+  width: 90%;
+  height: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+`;
+
+const StyledButton = styled.button`
+  width: 40%;
+  height: 100%;
+  background-color: salmon;
+  border: none;
+`;
+
 const PlannerButton = styled.button`
   @media (max-width: 768px) {
     width: 80%;
@@ -61,15 +78,67 @@ const PasswordInput = styled.input`
 `;
 
 const JoinModal = ({ setAccess }) => {
+  const [nickName, setNickName] = useState('');
+  const [code, setCode] = useState('');
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [connected, setConnected] = useState(false);
+  const websocket = useRef(null);
+
+  useEffect(() => {
+    console.log(nickName);
+    console.log(code);
+  }, [nickName, code]);
+
+  const makeRoom = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/api/socket/join', {
+        data: { leader: nickName, room_num: code },
+      });
+      if (response.status === 200) {
+        connectWebSocket();
+      }
+    } catch (error) {
+      alert(error);
+      console.error('Failed to join group:', error);
+    }
+  };
+
+  const connectWebSocket = () => {
+    websocket.current = new WebSocket(`ws://localhost:8000/api/ws/${nickName}/${code}`);
+
+    websocket.current.onopen = () => {
+      console.log('WebSocket connection established');
+      setConnected(true);
+    };
+
+    websocket.current.onclose = () => {
+      console.log('WebSocket connection closed');
+      setConnected(false);
+    };
+
+    websocket.current.onmessage = (event) => {
+      const data = event.data;
+      setMessages((prevMessages) => [...prevMessages, data]);
+    };
+
+    websocket.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  };
+
   return (
     <JoinModalContainer>
       <JoinModalFrame>
         <h1>Planner Alone</h1>
         <PlannerButton onClick={() => setAccess(false)}>홀로 시작 하기</PlannerButton>
         <h1>Planner Together</h1>
-        <PasswordInput placeholder="닉네임을 입력하세요" />
-        <PasswordInput placeholder="그룹 참가 코드를 입력하세요" />
-        <PlannerButton>함께 시작 하기</PlannerButton>
+        <PasswordInput placeholder="닉네임을 입력하세요" onChange={(e) => setNickName(e.target.value)} />
+        <PasswordInput placeholder="그룹 참가 코드를 입력하세요" onChange={(e) => setCode(e.target.value)} />
+        <ButtonArea>
+          <StyledButton onClick={() => setAccess(false)}>방만들기</StyledButton>
+          <StyledButton onClick={makeRoom}>방참가하기</StyledButton>
+        </ButtonArea>
       </JoinModalFrame>
     </JoinModalContainer>
   );
@@ -133,15 +202,6 @@ const DateRowFrame = styled.div`
   font-size: 20px;
 `;
 
-const SearchInput = styled.input`
-  width: 85%;
-  height: 100%;
-  border: none;
-  border-radius: 0px;
-  padding: 2%;
-  font-size: 15px;
-`;
-
 const SearchButton = styled.button`
   width: 15%;
   height: 100%;
@@ -153,25 +213,42 @@ const SearchButton = styled.button`
 
 const DestinationContainer = styled.div`
   width: 100%;
-  height: 30%;
+  height: 60%;
   display: flex;
   background-color: white;
   border: 1px solid black;
   box-sizing: border-box;
 `;
 
-const ImageFrame = styled.div`
-  width: 40%;
+const MapContainer = styled.div`
+  width: 100%;
   height: 100%;
-  border-right: 1px solid black;
 `;
 
-const Destination = () => {
-  return (
-    <DestinationContainer>
-      <ImageFrame>여행지 이미지가 들어갑니다</ImageFrame>
-    </DestinationContainer>
-  );
+const Destination = ({ coordinates }) => {
+  const mapContainer = useRef(null);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "//dapi.kakao.com/v2/maps/sdk.js?appkey=2fb6bdb50116c3ad9d5359e4b0eccac4&autoload=false";
+    script.onload = () => {
+      window.kakao.maps.load(() => {
+        if (mapContainer.current && coordinates) {
+          const map = new window.kakao.maps.Map(mapContainer.current, {
+            center: new window.kakao.maps.LatLng(coordinates.lng, coordinates.lat),
+            level: 3,
+          });
+          new window.kakao.maps.Marker({
+            position: new window.kakao.maps.LatLng(coordinates.lng, coordinates.lat),
+            map: map
+          });
+        }
+      });
+    };
+    document.head.appendChild(script);
+  }, [coordinates]);
+
+  return <MapContainer ref={mapContainer} />;
 };
 
 const TourAddButton = styled.button`
@@ -182,21 +259,7 @@ const TourAddButton = styled.button`
   }
 `;
 
-const ChatButton = styled.div`
-  @media (max-width: 768px) {
-    width: 80px;
-    height: 80px;
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    border: 1px solid black;
-    border-radius: 50%; 
-    margin: 4%;
-  }
-`;
-
-const BottomFrame = styled.button`
-  @media (max-width: 768px) {
+const BottomFrame = styled(Link)`
     width: 100%;
     height: 10%;
     display: flex;
@@ -206,6 +269,7 @@ const BottomFrame = styled.button`
     background-color: black;
     font-size: 20px;
     color: white;
+    text-decoration: none;
   }
 `;
 
@@ -220,11 +284,10 @@ const DatePickerWrapper = styled.div`
 const CustomDatePicker = styled(DatePicker)`
   width: 100%;
   height: 100%;
+  text-align: center;
   background-color: white;
-  border: 1px solid black;
-  padding: 2%;
+  padding-left: 22%;
   font-size: 15px;
-  box-sizing: border-box;
 `;
 
 const PlannerContent = () => {
@@ -233,10 +296,31 @@ const PlannerContent = () => {
   const [isDepartDate, setIsDepartDate] = useState(true);
   const [departDate, setDepartDate] = useState(null);
   const [arriveDate, setArriveDate] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [coordinates, setCoordinates] = useState(null);
+
+  const options = [
+    { value: '부산', label: '부산' },
+    { value: '서울', label: '서울' },
+    { value: '경주', label: '경주' },
+    { value: '포항', label: '포항' },
+    { value: '여수', label: '여수' },
+    { value: '가평', label: '가평' },
+    { value: '김해', label: '김해' },
+    { value: '대구', label: '대구' },
+    { value: '광주', label: '광주' },
+    { value: '강릉', label: '강릉' },
+    { value: '인천', label: '인천' },
+    { value: '전주', label: '전주' },
+    { value: '대전', label: '대전' },
+    { value: '거제', label: '거제' },
+    { value: '제주도', label: '제주도' },
+  ];
 
   useEffect(() => {
-    console.log("DepartDate: ", departDate);
-    console.log("ArriveDate: ", arriveDate);
+    console.log('DepartDate: ', departDate);
+    console.log('ArriveDate: ', arriveDate);
+    console.log('드롭다운 값', selectedOption);
   }, [departDate, arriveDate]);
 
   const handleDateChange = (date) => {
@@ -248,8 +332,25 @@ const PlannerContent = () => {
     setCalendar(false);
   };
 
+  const GetXY = async () => {
+    try {
+      const response = await axios.post(`http://localhost:8000/api/users/get_xy`, {
+        data: {
+          region: selectedOption.value,
+        },
+      });
+      setCoordinates({ lat: response.data[0], lng: response.data[1] });
+      localStorage.setItem("lat", response.data[0])
+      localStorage.setItem("lng", response.data[1])
+      localStorage.setItem("region", selectedOption.value)
+      console.log(response.data);
+    } catch (error) {
+      console.error('Failed to fetch coordinates:', error);
+    }
+  };
+
   const CustomInput = ({ value, onClick }) => (
-    <SearchInput onClick={onClick} value={value} readOnly />
+    <input onClick={onClick} value={value} readOnly style={{ width: '100%', height: '100%', border: 'none', fontSize: '15px', textAlign: 'center' }} />
   );
 
   return (
@@ -257,11 +358,7 @@ const PlannerContent = () => {
       {access && <JoinModal setAccess={setAccess} />}
       {stateCalendar && (
         <DatePickerWrapper>
-          <DatePicker
-            selected={isDepartDate ? departDate : arriveDate}
-            onChange={handleDateChange}
-            inline
-          />
+          <DatePicker selected={isDepartDate ? departDate : arriveDate} onChange={handleDateChange} inline />
         </DatePickerWrapper>
       )}
       <TopFrame>
@@ -270,10 +367,27 @@ const PlannerContent = () => {
       </TopFrame>
       <MainFrame>
         <MainRowFrame>
-          <SearchInput placeholder="어디로 떠나 볼까요?" />
-          <SearchButton>+</SearchButton>
+          <Select
+            options={options}
+            placeholder="어디로 떠나 볼까요?"
+            value={selectedOption}
+            onChange={setSelectedOption}
+            styles={{
+              container: (provided) => ({
+                ...provided,
+                width: '85%',
+                height: '100%',
+              }),
+              control: (provided) => ({
+                ...provided,
+                height: '100%',
+                fontSize: '15px',
+              }),
+            }}
+          />
+          <SearchButton onClick={GetXY}>+</SearchButton>
         </MainRowFrame>
-        <Destination />
+        <Destination coordinates={coordinates} />
         <MainRowFrame>
           <h2>여행 날짜가 어떻게 되시나요?</h2>
         </MainRowFrame>
@@ -288,7 +402,7 @@ const PlannerContent = () => {
               onChange={(date) => {
                 setDepartDate(date);
               }}
-              customInput={<CustomInput value={departDate ? departDate.toLocaleDateString() : "클릭하여 출발일을 선택하세요"} />}
+              customInput={<CustomInput value={departDate ? departDate.toLocaleDateString() : '클릭하여 출발일을 선택하세요'} />}
               wrapperClassName="custom-datepicker"
             />
           </DateRowFrame>
@@ -302,14 +416,13 @@ const PlannerContent = () => {
               onChange={(date) => {
                 setArriveDate(date);
               }}
-              customInput={<CustomInput value={arriveDate ? arriveDate.toLocaleDateString() : "클릭하여 도착일을 선택하세요"} />}
+              customInput={<CustomInput value={arriveDate ? arriveDate.toLocaleDateString() : '클릭하여 도착일을 선택하세요'} />}
               wrapperClassName="custom-datepicker"
             />
           </DateRowFrame>
         </DateFrame>
-        <ChatButton><IoChatbubbleEllipsesSharp /></ChatButton>
       </MainFrame>
-      <BottomFrame>플래너 생성</BottomFrame>
+      <BottomFrame to="/completePlanner">플래너 생성</BottomFrame>
     </Container>
   );
 };
