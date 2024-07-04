@@ -184,13 +184,14 @@ const TourAddButton = styled.button`
 
 const ChatButton = styled.div`
   @media (max-width: 768px) {
-    width: 50px;
-    height: 50px;
+    width: 80px;
+    height: 80px;
     position: absolute;
     left: 0;
     bottom: 0;
     border: 1px solid black;
     border-radius: 50%; 
+    margin: 4%;
   }
 `;
 
