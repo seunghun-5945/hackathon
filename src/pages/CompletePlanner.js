@@ -7,12 +7,14 @@ import { FaMicrophone } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { BsRobot } from "react-icons/bs";
 import axios from "axios";
+
 const axiosInstance = axios.create({
   baseURL:
     process.env.NODE_ENV === "development"
-      ? "http://localhost:8000/api" // 로컬 환경의 베이스 URL
+      ? "http://127.0.0.1:8000/api" // 로컬 환경의 베이스 URL
       : "https://port-0-fastapi-dc9c2nlsw04cjb.sel5.cloudtype.app/api", // 배포 환경의 베이스 URL
 });
+
 const Container = styled.div`
   width: 100%;
   height: 92dvh;
@@ -76,6 +78,7 @@ const ListModalContainer = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1000;
+  color: black;
 `;
 
 const ListModalTop = styled.div`
@@ -97,52 +100,48 @@ const CloseButton = styled.button`
 const ListModalMain = styled.div`
   width: 100%;
   height: 90%;
-  border: 1px solid black;
-`;
-
-const ListModalMainRowContainer = styled.div`
-  width: 100%;
-  height: 20%;
   display: flex;
-  border: 1px solid black;
 `;
 
-const ImageFrame = styled.div`
-  width: 40%;
+const ListContainer = styled.div`
+  width: 50%;
   height: 100%;
-  border: 1px solid black;
 `;
 
-const InfoContainer = styled.div`
-  width: 60%;
-  height: 100%;
+const ItemBox = styled.div`
+  width: 100%;
+  height: 160px;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border: 1px solid black;
+  color: black;
+  h2 {
+    color: green;
+  }
 `;
 
-const InfoFirstFrame = styled.div`
-  width: 100%;
-  height: 33%;
-  border: 1px solid black;
-`;
-
-const ListModalMainRow = ({ placeName }) => {
+const MyList = ({ userPick }) => {
   return (
-    <ListModalMainRowContainer>
-      <ImageFrame>이미지 들어갈거임</ImageFrame>
-      <InfoContainer>
-        <InfoFirstFrame>
-          이름: {placeName}
-        </InfoFirstFrame>
-        <InfoFirstFrame>
-          주소 들어갈거임
-        </InfoFirstFrame>
-        <InfoFirstFrame>
-          무언가 들어갈거임
-        </InfoFirstFrame>
-      </InfoContainer>
-    </ListModalMainRowContainer>
+    <ListContainer>
+      {userPick.map((item, index) => (
+        <ItemBox key={index}>
+          <h2>{item.placeName}</h2>
+          <h3 style={{ textAlign: "center" }}>{item.category}</h3>
+        </ItemBox>
+      ))}
+    </ListContainer>
+  );
+};
+
+const OtherList = () => {
+  return (
+    <ListContainer>
+      <ItemBox>
+        {/* 다른 사용자 리스트 렌더링 */}
+      </ItemBox>
+    </ListContainer>
   );
 };
 
@@ -154,9 +153,8 @@ const ListModal = ({ places, toggleModal, userPick }) => {
         <CloseButton onClick={toggleModal}>X</CloseButton>
       </ListModalTop>
       <ListModalMain>
-        {userPick.map((place, index) => (
-          <ListModalMainRow key={index} placeName={place} />
-        ))}
+        <MyList userPick={userPick} />
+        <OtherList />
       </ListModalMain>
     </ListModalContainer>
   );
@@ -169,32 +167,43 @@ const CompletePlannerContent = () => {
     lng: 126.570667,
   }); // Default coordinates for initialization
   const [modalState, setModalState] = useState(false);
-  const [placeName, setPlaceName] = useState('');
+  const [placeName, setPlaceName] = useState("");
+  const [category, setCategory] = useState("");
   const [places, setPlaces] = useState([]);
+  const [categories, setCategories] = useState([]); // categories 배열 추가
   const [userPick, setUserPick] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const websocket = useRef(null);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
+  const [recognition, setRecognition] = useState(null); // 추가
+  const [responseText, setResponseText] = useState(""); // 추가
+  const [transcript, setTranscript] = useState(""); // 추가
 
   useEffect(() => {
     const getScheduleData = async (region) => {
       try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/users/get_schedule_data`, {
-          data: {
-            region: region
+        const response = await axios.post(
+          `http://127.0.0.1:8000/api/users/get_schedule_data`,
+          {
+            data: {
+              region: region,
+            },
           }
-        });
+        );
         const placeNames = response.data.food.data_info.place_name;
+        const categoryNames = response.data.food.data_info.category_name;
         setPlaceName(placeNames[0]);
+        setCategory(categoryNames[0]);
         setPlaces(placeNames);
+        setCategories(categoryNames); // categories 설정
       } catch (error) {
-        console.error('Failed to fetch schedule data:', error);
+        console.error("Failed to fetch schedule data:", error);
       }
     };
-    getScheduleData(localStorage.getItem('region'));
-    connectWebSocket()
+    getScheduleData(localStorage.getItem("region"));
+    connectWebSocket();
   }, []);
 
   useEffect(() => {
@@ -204,27 +213,24 @@ const CompletePlannerContent = () => {
         level: 3,
       });
       new window.kakao.maps.Marker({
-        position: new window.kakao.maps.LatLng(
-          coordinates.lat,
-          coordinates.lng
-        ),
+        position: new window.kakao.maps.LatLng(coordinates.lat, coordinates.lng),
         map: map,
       });
     }
   }, [coordinates]);
 
   const connectWebSocket = () => {
-    const nickName = localStorage.getItem('NickName')
-    const code = parseInt(localStorage.getItem("Code"))
+    const nickName = localStorage.getItem("NickName");
+    const code = parseInt(localStorage.getItem("Code"));
     websocket.current = new WebSocket(`ws://127.0.0.1:8000/api/ws/${nickName}/${code}`);
 
     websocket.current.onopen = () => {
-      console.log('WebSocket connection established');
+      console.log("WebSocket connection established");
       setConnected(true);
     };
 
     websocket.current.onclose = () => {
-      console.log('WebSocket connection closed');
+      console.log("WebSocket connection closed");
       setConnected(false);
     };
 
@@ -234,7 +240,7 @@ const CompletePlannerContent = () => {
     };
 
     websocket.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
     };
   };
 
@@ -244,16 +250,21 @@ const CompletePlannerContent = () => {
 
   const handleCheck = () => {
     if (userPick.length >= 15) {
-      alert('You can only pick up to 15 places.');
+      alert("You can only pick up to 15 places.");
       return;
     }
-    setUserPick([...userPick, placeName]);
+    const newPick = { placeName, category };
+    setUserPick([...userPick, newPick]);
+    websocket.current.send(JSON.stringify(newPick)); // JSON 형식으로 데이터 전송
+
     const nextIndex = currentIndex + 1;
     if (nextIndex < places.length) {
       setCurrentIndex(nextIndex);
       setPlaceName(places[nextIndex]);
+      setCategory(categories[nextIndex]); // category 설정
     } else {
-      setPlaceName(''); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
+      setPlaceName(""); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
+      setCategory(""); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
     }
   };
 
@@ -262,8 +273,10 @@ const CompletePlannerContent = () => {
     if (nextIndex < places.length) {
       setCurrentIndex(nextIndex);
       setPlaceName(places[nextIndex]);
+      setCategory(categories[nextIndex]); // category 설정
     } else {
       setPlaceName(""); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
+      setCategory(""); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
     }
   };
 
@@ -301,9 +314,7 @@ const CompletePlannerContent = () => {
         console.log("백엔드로부터 받은 응답:", response.data);
 
         const responseData =
-          typeof response.data === "string"
-            ? response.data
-            : response.data.answer;
+          typeof response.data === "string" ? response.data : response.data.answer;
 
         if (responseData) {
           setResponseText(responseData);
@@ -375,7 +386,7 @@ const CompletePlannerContent = () => {
 
   return (
     <Container>
-      {modalState && <ListModal places={places} toggleModal={toggleModal} />}
+      {modalState && <ListModal places={places} toggleModal={toggleModal} userPick={userPick} />}
       <MapArea ref={mapContainer} />
       <InfoArea>
         <RowFrame>
@@ -390,10 +401,7 @@ const CompletePlannerContent = () => {
           <BsRobot onClick={spend} />
         </ChatButton>
         <ChatButton>
-          <FaMicrophone
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-          />
+          <FaMicrophone onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} />
         </ChatButton>
         <ChatButton>
           <MdDelete onClick={handleDelete} />
