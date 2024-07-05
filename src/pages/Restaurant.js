@@ -7,7 +7,7 @@ import Layout from "../components/Layout";
 import axios from 'axios';  
 const axiosInstance = axios.create({
   baseURL: process.env.NODE_ENV === 'development' 
-    ? 'http://localhost:8000/api'  // 로컬 환경의 베이스 URL
+    ? 'http://127.0.0.1:8000/api'  // 로컬 환경의 베이스 URL
     : 'https://port-0-fastapi-dc9c2nlsw04cjb.sel5.cloudtype.app/api',  // 배포 환경의 베이스 URL
 });
 

@@ -165,11 +165,15 @@ const CompletePlannerContent = () => {
   const [places, setPlaces] = useState([]);
   const [userPick, setUserPick] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const websocket = useRef(null);
+  const [message, setMessage] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     const getScheduleData = async (region) => {
       try {
-        const response = await axios.post(`http://localhost:8000/api/users/get_schedule_data`, {
+        const response = await axios.post(`http://127.0.0.1:8000/api/users/get_schedule_data`, {
           data: {
             region: region
           }
@@ -182,6 +186,7 @@ const CompletePlannerContent = () => {
       }
     };
     getScheduleData(localStorage.getItem('region'));
+    connectWebSocket()
   }, []);
 
   useEffect(() => {
@@ -196,6 +201,31 @@ const CompletePlannerContent = () => {
       });
     }
   }, [coordinates]);
+
+  const connectWebSocket = () => {
+    const nickName = localStorage.getItem('NickName')
+    const code = parseInt(localStorage.getItem("Code"))
+    websocket.current = new WebSocket(`ws://127.0.0.1:8000/api/ws/${nickName}/${code}`);
+
+    websocket.current.onopen = () => {
+      console.log('WebSocket connection established');
+      setConnected(true);
+    };
+
+    websocket.current.onclose = () => {
+      console.log('WebSocket connection closed');
+      setConnected(false);
+    };
+
+    websocket.current.onmessage = (event) => {
+      const data = event.data;
+      setMessages((prevMessages) => [...prevMessages, data]);
+    };
+
+    websocket.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+  };
 
   const toggleModal = () => {
     setModalState(!modalState);

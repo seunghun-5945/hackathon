@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef} from 'react';
 import styled from 'styled-components';
 import Layout from '../components/Layout';
 import { FcPlanner } from 'react-icons/fc';
@@ -8,7 +8,7 @@ import { FaHome } from 'react-icons/fa';
 import axios from 'axios';
 import Select from 'react-select';
 import 'react-datepicker/dist/react-datepicker.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Container = styled.div`
   @media (max-width: 768px) {
@@ -80,23 +80,21 @@ const PasswordInput = styled.input`
 const JoinModal = ({ setAccess }) => {
   const [nickName, setNickName] = useState('');
   const [code, setCode] = useState('');
-  const [message, setMessage] = useState('');
-  const [messages, setMessages] = useState([]);
-  const [connected, setConnected] = useState(false);
-  const websocket = useRef(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     console.log(nickName);
     console.log(code);
   }, [nickName, code]);
 
   const makeRoom = async () => {
+    const Nm = localStorage.getItem("NickName")
+    const Cd = localStorage.getItem("Code")
     try {
-      const response = await axios.post('http://localhost:8000/api/socket/join', {
-        data: { leader: nickName, room_num: code },
+      const response = await axios.post('http://127.0.0.1:8000/api/socket/join', {
+        data: { leader: Nm, room_num: parseInt(Cd)},
       });
       if (response.status === 200) {
-        connectWebSocket();
+        navigate("/CompletePlanner");
       }
     } catch (error) {
       alert(error);
@@ -104,28 +102,19 @@ const JoinModal = ({ setAccess }) => {
     }
   };
 
-  const connectWebSocket = () => {
-    websocket.current = new WebSocket(`ws://localhost:8000/api/ws/${nickName}/${code}`);
+  const onChangeNickName = (e) => {
+    return (
+      setNickName(e.target.value),
+      localStorage.setItem("NickName", nickName)
+    )
+  }
 
-    websocket.current.onopen = () => {
-      console.log('WebSocket connection established');
-      setConnected(true);
-    };
-
-    websocket.current.onclose = () => {
-      console.log('WebSocket connection closed');
-      setConnected(false);
-    };
-
-    websocket.current.onmessage = (event) => {
-      const data = event.data;
-      setMessages((prevMessages) => [...prevMessages, data]);
-    };
-
-    websocket.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-  };
+  const onChangeCode = (e) => {
+    return (
+      setCode(e.target.value),
+      localStorage.setItem("Code", code)
+    )
+  }
 
   return (
     <JoinModalContainer>
@@ -133,8 +122,8 @@ const JoinModal = ({ setAccess }) => {
         <h1>Planner Alone</h1>
         <PlannerButton onClick={() => setAccess(false)}>홀로 시작 하기</PlannerButton>
         <h1>Planner Together</h1>
-        <PasswordInput placeholder="닉네임을 입력하세요" onChange={(e) => setNickName(e.target.value)} />
-        <PasswordInput placeholder="그룹 참가 코드를 입력하세요" onChange={(e) => setCode(e.target.value)} />
+        <PasswordInput placeholder="닉네임을 입력하세요" onChange={onChangeNickName} />
+        <PasswordInput placeholder="그룹 참가 코드를 입력하세요" onChange={onChangeCode} />
         <ButtonArea>
           <StyledButton onClick={() => setAccess(false)}>방만들기</StyledButton>
           <StyledButton onClick={makeRoom}>방참가하기</StyledButton>
@@ -334,7 +323,7 @@ const PlannerContent = () => {
 
   const GetXY = async () => {
     try {
-      const response = await axios.post(`http://localhost:8000/api/users/get_xy`, {
+      const response = await axios.post(`http://127.0.0.1:8000/api/users/get_xy`, {
         data: {
           region: selectedOption.value,
         },
@@ -352,6 +341,30 @@ const PlannerContent = () => {
   const CustomInput = ({ value, onClick }) => (
     <input onClick={onClick} value={value} readOnly style={{ width: '100%', height: '100%', border: 'none', fontSize: '15px', textAlign: 'center' }} />
   );
+
+  const socketCreate = async() => {
+    const leader = localStorage.getItem("NickName")
+    const roomNum = parseInt(localStorage.getItem("Code"))
+    try {
+      const response = await axios.post('http://127.0.0.1:8000/api/socket/ws_create', {
+        data: {
+          leader: leader,
+          room_num: roomNum
+        }
+      });
+  
+      if (response.data.error) {
+        console.error('Error:', response.data.error);
+        return { error: response.data.error };
+      }
+  
+      console.log('Room number:', response.data.number);
+      return { number: response.data.number };
+    } catch (error) {
+      console.error('Failed to create group:', error);
+      return { error: 'Failed to create group' };
+    }
+  }
 
   return (
     <Container>
@@ -422,7 +435,7 @@ const PlannerContent = () => {
           </DateRowFrame>
         </DateFrame>
       </MainFrame>
-      <BottomFrame to="/completePlanner">플래너 생성</BottomFrame>
+      <BottomFrame to="/completePlanner" onClick={socketCreate}>플래너 생성</BottomFrame>
     </Container>
   );
 };
