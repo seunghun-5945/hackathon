@@ -5,6 +5,7 @@ import { IoChatbubbleEllipsesSharp } from 'react-icons/io5';
 import { FaCheck } from "react-icons/fa";
 import { FaMicrophone } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import { BsRobot } from "react-icons/bs";
 import axios from 'axios';
 
 const Container = styled.div`
@@ -46,8 +47,8 @@ const ButtonArea = styled.div`
 
 const ChatButton = styled.div`
   @media (max-width: 768px) {
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -82,11 +83,11 @@ const ListModalTop = styled.div`
   padding-right: 5%;
 `;
 
-  const CloseButton = styled.button`
-    width: 50px;
-    height: 50px;
-    background-color: red;
-  `;
+const CloseButton = styled.button`
+  width: 50px;
+  height: 50px;
+  background-color: red;
+`;
 
 const ListModalMain = styled.div`
   width: 100%;
@@ -115,19 +116,19 @@ const InfoContainer = styled.div`
   border: 1px solid black;
 `;
 
-  const InfoFirstFrame = styled.div`
-    width: 100%;
-    height: 33%;
-    border: 1px solid black;
-  `;
+const InfoFirstFrame = styled.div`
+  width: 100%;
+  height: 33%;
+  border: 1px solid black;
+`;
 
-const ListModalMainRow = () => {
+const ListModalMainRow = ({ placeName }) => {
   return (
     <ListModalMainRowContainer>
       <ImageFrame>이미지 들어갈거임</ImageFrame>
       <InfoContainer>
         <InfoFirstFrame>
-          이름 들어갈거임
+          이름: {placeName}
         </InfoFirstFrame>
         <InfoFirstFrame>
           주소 들어갈거임
@@ -140,18 +141,17 @@ const ListModalMainRow = () => {
   )
 }
 
-const ListModal = () => {
+const ListModal = ({ places, toggleModal }) => {
   return (
     <ListModalContainer>
       <ListModalTop>
         리스트 모달임
-        <CloseButton>X</CloseButton>
+        <CloseButton onClick={toggleModal}>X</CloseButton>
       </ListModalTop>
       <ListModalMain>
-        <ListModalMainRow></ListModalMainRow>
-        <ListModalMainRow></ListModalMainRow>
-        <ListModalMainRow></ListModalMainRow>
-        <ListModalMainRow></ListModalMainRow>
+        {places.map((place, index) => (
+          <ListModalMainRow key={index} placeName={place} />
+        ))}
       </ListModalMain>
     </ListModalContainer>
   )
@@ -161,7 +161,10 @@ const CompletePlannerContent = () => {
   const mapContainer = useRef(null);
   const [coordinates, setCoordinates] = useState({ lat: 33.450701, lng: 126.570667 }); // Default coordinates for initialization
   const [modalState, setModalState] = useState(false);
-  const [placeName, setPlaceName] = useState('')
+  const [placeName, setPlaceName] = useState('');
+  const [places, setPlaces] = useState([]);
+  const [userPick, setUserPick] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const getScheduleData = async (region) => {
@@ -171,18 +174,15 @@ const CompletePlannerContent = () => {
             region: region
           }
         });
-        console.log(response.data.food.data_info.place_name[0]);
-        setPlaceName(response.data.food.data_info.place_name[0]);
-        console.log(placeName);
-        return response.data;
+        const placeNames = response.data.food.data_info.place_name;
+        setPlaceName(placeNames[0]);
+        setPlaces(placeNames);
       } catch (error) {
         console.error('Failed to fetch schedule data:', error);
-        throw error;
       }
     };
-    console.log(getScheduleData(localStorage.getItem('region')))
+    getScheduleData(localStorage.getItem('region'));
   }, []);
-  
 
   useEffect(() => {
     if (coordinates.lat && coordinates.lng && mapContainer.current) {
@@ -201,23 +201,51 @@ const CompletePlannerContent = () => {
     setModalState(!modalState);
   };
 
+  const handleCheck = () => {
+    if (userPick.length >= 15) {
+      alert('You can only pick up to 15 places.');
+      return;
+    }
+    setUserPick([...userPick, placeName]);
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < places.length) {
+      setCurrentIndex(nextIndex);
+      setPlaceName(places[nextIndex]);
+    } else {
+      setPlaceName(''); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
+    }
+  };
+
+  const handleDelete = () => {
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < places.length) {
+      setCurrentIndex(nextIndex);
+      setPlaceName(places[nextIndex]);
+    } else {
+      setPlaceName(''); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
+    }
+  };
+
   return (
     <Container>
-      {modalState && <ListModal />}
+      {modalState && <ListModal places={places} toggleModal={toggleModal} />}
       <MapArea ref={mapContainer} />
       <InfoArea>
-        <RowFrame><h2>이름</h2><h2>asdasd</h2></RowFrame>
-        <RowFrame><h2>주소</h2><button onClick={toggleModal}>리스트</button></RowFrame>
+        <RowFrame><h2>{placeName}</h2></RowFrame>
+        <RowFrame><button onClick={toggleModal}>리스트 확인</button></RowFrame>
       </InfoArea>
       <ButtonArea>
         <ChatButton>
-          <MdDelete />
+          <BsRobot onClick={() => { console.log(placeName, userPick) }}/>
         </ChatButton>
         <ChatButton>
-          <FaMicrophone onClick={()=> {console.log(placeName)}}/>
+          <FaMicrophone />
         </ChatButton>
         <ChatButton>
-          <FaCheck />
+          <MdDelete onClick={handleDelete} />
+        </ChatButton>
+        <ChatButton>
+          <FaCheck onClick={handleCheck} />
         </ChatButton>
       </ButtonArea>
     </Container>
