@@ -1,13 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Layout from "../components/Layout";
-import { IoChatbubbleEllipsesSharp } from 'react-icons/io5';
+import { IoChatbubbleEllipsesSharp } from "react-icons/io5";
 import { FaCheck } from "react-icons/fa";
 import { FaMicrophone } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { BsRobot } from "react-icons/bs";
-import axios from 'axios';
-
+import axios from "axios";
+const axiosInstance = axios.create({
+  baseURL:
+    process.env.NODE_ENV === "development"
+      ? "http://localhost:8000/api" // 로컬 환경의 베이스 URL
+      : "https://port-0-fastapi-dc9c2nlsw04cjb.sel5.cloudtype.app/api", // 배포 환경의 베이스 URL
+});
 const Container = styled.div`
   width: 100%;
   height: 92dvh;
@@ -138,8 +143,8 @@ const ListModalMainRow = ({ placeName }) => {
         </InfoFirstFrame>
       </InfoContainer>
     </ListModalMainRowContainer>
-  )
-}
+  );
+};
 
 const ListModal = ({ places, toggleModal, userPick }) => {
   return (
@@ -154,12 +159,15 @@ const ListModal = ({ places, toggleModal, userPick }) => {
         ))}
       </ListModalMain>
     </ListModalContainer>
-  )
-}
+  );
+};
 
 const CompletePlannerContent = () => {
   const mapContainer = useRef(null);
-  const [coordinates, setCoordinates] = useState({ lat: 33.450701, lng: 126.570667 }); // Default coordinates for initialization
+  const [coordinates, setCoordinates] = useState({
+    lat: 33.450701,
+    lng: 126.570667,
+  }); // Default coordinates for initialization
   const [modalState, setModalState] = useState(false);
   const [placeName, setPlaceName] = useState('');
   const [places, setPlaces] = useState([]);
@@ -196,8 +204,11 @@ const CompletePlannerContent = () => {
         level: 3,
       });
       new window.kakao.maps.Marker({
-        position: new window.kakao.maps.LatLng(coordinates.lat, coordinates.lng),
-        map: map
+        position: new window.kakao.maps.LatLng(
+          coordinates.lat,
+          coordinates.lng
+        ),
+        map: map,
       });
     }
   }, [coordinates]);
@@ -252,24 +263,137 @@ const CompletePlannerContent = () => {
       setCurrentIndex(nextIndex);
       setPlaceName(places[nextIndex]);
     } else {
-      setPlaceName(''); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
+      setPlaceName(""); // 모든 장소를 다 선택했을 경우 처리 (원하는 방식으로 처리)
     }
+  };
+
+  const spend = async () => {
+    console.log(placeName);
+    try {
+      const response = await axiosInstance.post(
+        "/chain1",
+        { query: placeName },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("백엔드로 전송된 가게 이름:", response.data);
+    } catch (error) {
+      console.error("백엔드로 가게 이름 전송 중 오류 발생:", error);
+    }
+  };
+
+  useEffect(() => {
+    const sendTranscriptToBackend = async (text) => {
+      try {
+        console.log("백엔드로 전송할 텍스트:", text);
+        const response = await axiosInstance.post(
+          "/request",
+          { question: text },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("백엔드로부터 받은 응답:", response.data);
+
+        const responseData =
+          typeof response.data === "string"
+            ? response.data
+            : response.data.answer;
+
+        if (responseData) {
+          setResponseText(responseData);
+          speakText(responseData);
+        } else {
+          console.error("응답 데이터가 올바르지 않습니다:", response.data);
+        }
+      } catch (error) {
+        console.error("백엔드로 텍스트 전송 중 오류 발생:", error);
+      }
+    };
+
+    if (!recognition) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        console.error("이 브라우저는 음성 인식을 지원하지 않습니다.");
+        return;
+      }
+      const newRecognition = new SpeechRecognition();
+      newRecognition.lang = "ko-KR";
+      newRecognition.onstart = () => {
+        console.log("음성 인식 시작");
+      };
+      newRecognition.onresult = (event) => {
+        const speechToText = event.results[0][0].transcript;
+        console.log("인식된 텍스트:", speechToText);
+        setTranscript(speechToText);
+        sendTranscriptToBackend(speechToText);
+      };
+      newRecognition.onend = () => {
+        console.log("음성 인식 종료");
+      };
+      setRecognition(newRecognition);
+    }
+  }, [recognition]);
+
+  const handleMouseDown = () => {
+    if (recognition) {
+      recognition.start();
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (recognition) {
+      recognition.stop();
+    }
+  };
+
+  const speakText = (text) => {
+    if (!window.speechSynthesis) {
+      console.error("이 브라우저는 음성 합성을 지원하지 않습니다.");
+      return;
+    }
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "ko-KR";
+    utterance.onstart = () => {
+      console.log("음성 합성 시작:", text);
+    };
+    utterance.onend = () => {
+      console.log("음성 합성 종료");
+    };
+    utterance.onerror = (event) => {
+      console.error("음성 합성 중 오류 발생:", event.error);
+    };
+    synth.speak(utterance);
   };
 
   return (
     <Container>
-      {modalState && <ListModal places={places} toggleModal={toggleModal} userPick={userPick} />}
+      {modalState && <ListModal places={places} toggleModal={toggleModal} />}
       <MapArea ref={mapContainer} />
       <InfoArea>
-        <RowFrame><h2>{placeName}</h2></RowFrame>
-        <RowFrame><button onClick={toggleModal}>리스트 확인</button></RowFrame>
+        <RowFrame>
+          <h2>{placeName}</h2>
+        </RowFrame>
+        <RowFrame>
+          <button onClick={toggleModal}>리스트 확인</button>
+        </RowFrame>
       </InfoArea>
       <ButtonArea>
         <ChatButton>
-          <BsRobot onClick={() => { console.log(placeName, userPick) }}/>
+          <BsRobot onClick={spend} />
         </ChatButton>
         <ChatButton>
-          <FaMicrophone />
+          <FaMicrophone
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+          />
         </ChatButton>
         <ChatButton>
           <MdDelete onClick={handleDelete} />
