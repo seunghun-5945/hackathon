@@ -141,7 +141,7 @@ const ListModalMainRow = ({ placeName }) => {
   )
 }
 
-const ListModal = ({ places, toggleModal }) => {
+const ListModal = ({ places, toggleModal, userPick }) => {
   return (
     <ListModalContainer>
       <ListModalTop>
@@ -149,7 +149,7 @@ const ListModal = ({ places, toggleModal }) => {
         <CloseButton onClick={toggleModal}>X</CloseButton>
       </ListModalTop>
       <ListModalMain>
-        {places.map((place, index) => (
+        {userPick.map((place, index) => (
           <ListModalMainRow key={index} placeName={place} />
         ))}
       </ListModalMain>
@@ -258,7 +258,7 @@ const CompletePlannerContent = () => {
 
   return (
     <Container>
-      {modalState && <ListModal places={places} toggleModal={toggleModal} />}
+      {modalState && <ListModal places={places} toggleModal={toggleModal} userPick={userPick} />}
       <MapArea ref={mapContainer} />
       <InfoArea>
         <RowFrame><h2>{placeName}</h2></RowFrame>
