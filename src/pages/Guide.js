@@ -49,7 +49,6 @@ const FirstpageFrame = styled.div`
   }
 `;
 
-
 const FirstPage = () => (
   <Frame>
     <FirstpageFrame>
@@ -134,7 +133,6 @@ const NinthPage = () => (
   </Frame>
 );
 
-// 애니메이션 스타일 정의
 const PageTransition = styled.div`
   width: 100%;
   height: 100%;

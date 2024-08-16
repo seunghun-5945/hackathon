@@ -345,6 +345,7 @@ const PlannerContent = () => {
   const socketCreate = async() => {
     const leader = localStorage.getItem("NickName")
     const roomNum = parseInt(localStorage.getItem("Code"))
+    console.log("소켓그룹생성")
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/socket/ws_create', {
         data: {
