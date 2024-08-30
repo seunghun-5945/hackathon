@@ -5,9 +5,14 @@ import { FaCheck } from "react-icons/fa";
 import { FaMicrophone } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { BsRobot } from "react-icons/bs";
-import axios from 'axios';
-import { GoChecklist } from "react-icons/go";
-import { useLocation } from "react-router-dom";
+import axios from "axios";
+
+const axiosInstance = axios.create({
+  baseURL:
+    process.env.NODE_ENV === "development"
+      ? "http://127.0.0.1:8000/api" // 로컬 환경의 베이스 URL
+      : "https://port-0-fastapi-dc9c2nlsw04cjb.sel5.cloudtype.app/api", // 배포 환경의 베이스 URL
+});
 
 const Container = styled.div`
   width: 100%;
@@ -124,7 +129,7 @@ const ListModalMainRowContainer = styled.div`
   color: gray;
 `;
 
-const ImageFrame = styled.div`
+const ListContainer = styled.div`
   width: 40%;
   height: 100%;
   border-bottom: 1px solid black;
@@ -289,7 +294,7 @@ const CompletePlannerContent = () => {
         setFoodCategory(foodCategory);
         setFoodPlaces(placeNames);
       } catch (error) {
-        console.error('Failed to fetch schedule data:', error);
+        console.error("Failed to fetch schedule data:", error);
       }
     };
     getScheduleData(localStorage.getItem('region'));
@@ -301,12 +306,12 @@ const CompletePlannerContent = () => {
     websocket.current = new WebSocket(`ws://127.0.0.1:8001/api/ws/${nickName}/${code}`);
 
     websocket.current.onopen = () => {
-      console.log('WebSocket connection established');
+      console.log("WebSocket connection established");
       setConnected(true);
     };
 
     websocket.current.onclose = () => {
-      console.log('WebSocket connection closed');
+      console.log("WebSocket connection closed");
       setConnected(false);
     };
 
@@ -337,7 +342,7 @@ const CompletePlannerContent = () => {
     
 
     websocket.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
     };
   };
 
@@ -403,6 +408,7 @@ const CompletePlannerContent = () => {
       setPlaceName('');
     }
   };
+
 
   return (
     <Container>
