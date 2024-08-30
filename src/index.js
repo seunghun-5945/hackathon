@@ -12,6 +12,7 @@ import SignUp from './pages/SignUp';
 import Planner from './pages/Planner';
 import CompletePlanner from './pages/CompletePlanner';
 import i18n from './components/i18n';
+import Result from './pages/Result';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -24,6 +25,7 @@ root.render(
         <Route path="SignIn" element={<SignIn />} />
         <Route path="SignUp"  element={<SignUp />} />
         <Route path="Planner" element={<Planner/>} />
+        <Route path="Result" element={<Result />} />
         <Route path="CompletePlanner" element={<CompletePlanner/>} />
       </Routes>
     </BrowserRouter>

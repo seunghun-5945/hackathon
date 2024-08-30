@@ -32,16 +32,42 @@ const JoinModalContainer = styled.div`
 
 const JoinModalFrame = styled.div`
   @media (max-width: 768px) {
-    width: 80%;
-    height: 60%;
+    position: relative;
+    width: 100%;
+    height: 100%;
     display: flex;
+    padding: 15% 0 15% 0;
     flex-direction: column;
     align-items: center;
     justify-content: space-around;
-    background-color: white;
+    background-image: url('https://cdn.pixabay.com/photo/2017/09/04/16/58/passport-2714675_1280.jpg');
+    background-size: cover;  /* 이미지가 프레임을 완전히 덮도록 설정 */
+    background-position: center;  /* 이미지를 중앙에 위치 */
     color: black;
+    
+    /* 흐림 효과 추가 */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.5); /* 흰색 반투명 레이어 */
+      backdrop-filter: blur(1px); /* 배경을 흐리게 만듦 */
+      z-index: 1;
+    }
+
+    /* 콘텐츠가 흐림 효과 위에 있도록 설정 */
+    h1, button, input {
+      position: relative;
+      z-index: 2;
+      color: black;
+    }
   }
 `;
+
+
 
 const ButtonArea = styled.div`
   width: 90%;
@@ -52,10 +78,12 @@ const ButtonArea = styled.div`
 `;
 
 const StyledButton = styled.button`
-  width: 40%;
-  height: 100%;
+  width: 80%;
+  height: 10%;
   background-color: salmon;
-  border: none;
+  border: 1px solid gray;
+  color: white;
+  font-size: 15px;
 `;
 
 const PlannerButton = styled.button`
@@ -72,9 +100,10 @@ const PlannerButton = styled.button`
 const PasswordInput = styled.input`
   width: 80%;
   height: 10%;
-  border: 1px solid black;
+  border: 1px solid lightgray;
   font-size: 15px;
   padding: 2%;
+  border-radius: 20px;
 `;
 
 const JoinModal = ({ setAccess }) => {
@@ -86,15 +115,27 @@ const JoinModal = ({ setAccess }) => {
     console.log(code);
   }, [nickName, code]);
 
+  useEffect(() => {
+    return (
+      setNickName(""),
+      localStorage.setItem("NickName", ""),
+      console.log(nickName),
+      setCode(""),
+      localStorage.setItem("Code", " "),
+      console.log(code)
+    )
+  }, [])
+
   const makeRoom = async () => {
     const Nm = localStorage.getItem("NickName")
     const Cd = localStorage.getItem("Code")
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/socket/join', {
-        data: { leader: Nm, room_num: parseInt(Cd)},
+      const response = await axios.post('http://127.0.0.1:8001/api/socket/join', {
+        data: { leader: Nm, room_num: parseInt(Cd), region:""},
       });
       if (response.status === 200) {
-        navigate("/CompletePlanner");
+        localStorage.setItem("region", response.data)
+        navigate("/CompletePlanner", { state: { responseData: response.data } });
       }
     } catch (error) {
       alert(error);
@@ -103,31 +144,26 @@ const JoinModal = ({ setAccess }) => {
   };
 
   const onChangeNickName = (e) => {
-    return (
-      setNickName(e.target.value),
-      localStorage.setItem("NickName", nickName)
-    )
+    const newNickName = e.target.value;
+    setNickName(newNickName);
+    localStorage.setItem("NickName", newNickName);
   }
 
   const onChangeCode = (e) => {
-    return (
-      setCode(e.target.value),
-      localStorage.setItem("Code", code)
-    )
+    const newCode = e.target.value;
+    setCode(newCode);
+    localStorage.setItem("Code", newCode);
   }
 
   return (
     <JoinModalContainer>
       <JoinModalFrame>
-        <h1>Planner Alone</h1>
-        <PlannerButton onClick={() => setAccess(false)}>홀로 시작 하기</PlannerButton>
-        <h1>Planner Together</h1>
+        <h1>여행 플래너 생성</h1>
+        {/*<PlannerButton onClick={() => setAccess(false)}>홀로 시작 하기</PlannerButton>*/}
         <PasswordInput placeholder="닉네임을 입력하세요" onChange={onChangeNickName} />
         <PasswordInput placeholder="그룹 참가 코드를 입력하세요" onChange={onChangeCode} />
-        <ButtonArea>
           <StyledButton onClick={() => setAccess(false)}>방만들기</StyledButton>
           <StyledButton onClick={makeRoom}>방참가하기</StyledButton>
-        </ButtonArea>
       </JoinModalFrame>
     </JoinModalContainer>
   );
@@ -323,7 +359,7 @@ const PlannerContent = () => {
 
   const GetXY = async () => {
     try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/users/get_xy`, {
+      const response = await axios.post(`http://127.0.0.1:8001/api/users/get_xy`, {
         data: {
           region: selectedOption.value,
         },
@@ -347,10 +383,11 @@ const PlannerContent = () => {
     const roomNum = parseInt(localStorage.getItem("Code"))
     console.log("소켓그룹생성")
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/socket/ws_create', {
+      const response = await axios.post('http://127.0.0.1:8001/api/socket/ws_create', {
         data: {
           leader: leader,
-          room_num: roomNum
+          room_num: roomNum,
+          region: localStorage.getItem("region")
         }
       });
   

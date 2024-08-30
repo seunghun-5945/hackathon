@@ -7,7 +7,7 @@ import Layout from "../components/Layout";
 import axios from 'axios';  
 const axiosInstance = axios.create({
   baseURL: process.env.NODE_ENV === 'development' 
-    ? 'http://127.0.0.1:8000/api'  // 로컬 환경의 베이스 URL
+    ? 'http://127.0.0.1:8001/api'  // 로컬 환경의 베이스 URL
     : 'https://port-0-fastapi-dc9c2nlsw04cjb.sel5.cloudtype.app/api',  // 배포 환경의 베이스 URL
 });
 
@@ -86,13 +86,13 @@ const MenuButton = styled.button`
 
 const MarkerModalContainer = styled.div`
   width: 90%;
-  height: 60%;
+  height: 80%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
   background-color: white;
-  border: 1px solid #eeeeee;
+  border: 1px solid lightgray;
   color: black;
   position: absolute;
   top: 50%;
@@ -108,7 +108,6 @@ const MarkerModalTopFrame = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
-  border-bottom: 1px solid #eeeeee;
 
   h4 {
     color: gray;
@@ -123,8 +122,9 @@ const MarkerModalMainFrame = styled.div`
   align-items: center;
   justify-content: center;
   img {
-    width: 60%;
-    height: 60%;
+    width: 90%;
+    height: 80%;
+    border-radius: 20px;
   }
 `;
 
@@ -216,7 +216,7 @@ const MarkerModal = ({ placeName, categoryName, 주소, 사진, 전화번호, �
           <h4>영업시간: {영업시간}</h4>
         </MarkerModalMainBottomFrame>
       </MarkerModalMainFrame>
-      <MarkerModalBottomFrame onClick={closeModal}>Close</MarkerModalBottomFrame>
+      <MarkerModalBottomFrame onClick={closeModal}>닫기</MarkerModalBottomFrame>
     </MarkerModalContainer>
   );
 };
