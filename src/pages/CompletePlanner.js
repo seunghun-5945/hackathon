@@ -5,7 +5,9 @@ import { FaCheck } from "react-icons/fa";
 import { FaMicrophone } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { BsRobot } from "react-icons/bs";
+import { GoChecklist } from "react-icons/go";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 const axiosInstance = axios.create({
   baseURL:
