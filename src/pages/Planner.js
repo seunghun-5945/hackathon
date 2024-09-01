@@ -63,6 +63,9 @@ const JoinModalFrame = styled.div`
       position: relative;
       z-index: 2;
       color: black;
+    }t
+    h1 {
+      color: black;
     }
   }
 `;
@@ -81,9 +84,9 @@ const StyledButton = styled.button`
   width: 80%;
   height: 10%;
   background-color: salmon;
-  border: 1px solid gray;
-  color: white;
-  font-size: 15px;
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
 `;
 
 const PlannerButton = styled.button`

@@ -164,8 +164,9 @@ const RestModalContainer = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: salmon;
+    background-color: white;
     z-index: 1000;
+    color: black;
   }
 `;
 
@@ -196,6 +197,7 @@ const RestModal = () => {
 
   return (
     <RestModalContainer>
+      <img src="https://cdn.pixabay.com/animation/2023/11/09/03/05/03-05-45-320_256.gif" style={{width: "30%"}}/>
       <RestModalTextFrame>
         <h1>플래너 작성 대기중{dots}</h1>
       </RestModalTextFrame>
@@ -361,6 +363,25 @@ const CompletePlannerContent = () => {
     setModalState(!modalState);
   };
 
+  const sendListToServer = async (userPickData) => {
+    const payload = {
+      data: {
+        user_list: userPickData,
+        user: localStorage.getItem("NickName"),
+        num: parseInt(localStorage.getItem("Code")),
+      },
+    };
+
+    try {
+      const response = await axios.post("http://localhost:8001/api/list_add", payload, {
+        withCredentials: true
+      });
+      alert("리스트가 성공적으로 추가되었습니다.");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleCheck = async (event) => {
     event.preventDefault();
     if (currentIndex >= foodPlaces.length - 1) {
@@ -371,22 +392,7 @@ const CompletePlannerContent = () => {
         placeName: foodPlaces[currentIndex]
       }].map(item => item.placeName);
 
-      const payload = {
-        data: {
-          user_list: userPickData,
-          user: localStorage.getItem("NickName"),
-          num: parseInt(localStorage.getItem("Code")),
-        },
-      };
-  
-      try {
-        const response = await axios.post("http://localhost:8001/api/list_add", payload, {
-          withCredentials: true  // 이 옵션 추가
-        });
-        alert("리스트가 성공적으로 추가되었습니다.");
-      } catch (error) {
-        console.log(error)
-      }
+      await sendListToServer(userPickData);
     }
 
     setUserPick([...userPick, {
@@ -399,15 +405,20 @@ const CompletePlannerContent = () => {
     setCurrentIndex(nextIndex);
     setPlaceName(foodPlaces[nextIndex]);
   };
-  
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const nextIndex = currentIndex + 1;
     if (nextIndex < foodPlaces.length) {
       setCurrentIndex(nextIndex);
       setPlaceName(foodPlaces[nextIndex]);
     } else {
+      alert('마지막 항목입니다!');
       setPlaceName('');
+      setRestModalState(true);
+      
+      const userPickData = userPick.map(item => item.placeName);
+      
+      await sendListToServer(userPickData);
     }
   };
 
