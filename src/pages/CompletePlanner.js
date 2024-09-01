@@ -12,7 +12,7 @@ import { useLocation } from "react-router-dom";
 const axiosInstance = axios.create({
   baseURL:
     process.env.NODE_ENV === "development"
-      ? "http://127.0.0.1:8000/api" // 로컬 환경의 베이스 URL
+      ? "http://127.0.0.1:8001/api" // 로컬 환경의 베이스 URL
       : "https://port-0-fastapi-dc9c2nlsw04cjb.sel5.cloudtype.app/api", // 배포 환경의 베이스 URL
 });
 
@@ -252,6 +252,9 @@ const CompletePlannerContent = () => {
   const websocket = useRef(null);
   const [connected, setConnected] = useState(false);
   const [restModalState, setRestModalState] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [responseText, setResponseText] = useState("");
+  const [transcript, setTranscript] = useState("");
 
   useEffect(() => {
     if (responseData) {
@@ -422,6 +425,111 @@ const CompletePlannerContent = () => {
     }
   };
 
+  const Chain = async () => {
+    try {
+      const response = await axiosInstance.post(
+        "/chain",
+        { query: placeName },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("백엔드로 전송된 가게 이름:", response.data);
+    }
+    catch (error) {
+      console.error("백엔드로 가게 이름 전송 중 오류 발생:", error);
+    }
+  }
+
+  useEffect(() => {
+    const sendTranscriptToBackend = async (text) => {
+      try {
+        console.log("백엔드로 전송할 텍스트:", text);
+        const response = await axiosInstance.post(
+          "/request",
+          { question: text },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("백엔드로부터 받은 응답:", response.data);
+
+        const responseData =
+          typeof response.data === "string"
+            ? response.data
+            : response.data.answer;
+
+        if (responseData) {
+          setResponseText(responseData);
+          speakText(responseData);
+        } else {
+          console.error("응답 데이터가 올바르지 않습니다:", response.data);
+        }
+      } catch (error) {
+        console.error("백엔드로 텍스트 전송 중 오류 발생:", error);
+      }
+    };
+
+    if (!recognition) {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        console.error("이 브라우저는 음성 인식을 지원하지 않습니다.");
+        return;
+      }
+      const newRecognition = new SpeechRecognition();
+      newRecognition.lang = "ko-KR";
+      newRecognition.onstart = () => {
+        console.log("음성 인식 시작");
+      };
+      newRecognition.onresult = (event) => {
+        const speechToText = event.results[0][0].transcript;
+        console.log("인식된 텍스트:", speechToText);
+        setTranscript(speechToText);
+        sendTranscriptToBackend(speechToText);
+      };
+      newRecognition.onend = () => {
+        console.log("음성 인식 종료");
+      };
+      setRecognition(newRecognition);
+    }
+  }, [recognition]);
+
+  const handleMouseDown = () => {
+    if (recognition) {
+      recognition.start();
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (recognition) {
+      recognition.stop();
+    }
+  };
+
+  const speakText = (text) => {
+    if (!window.speechSynthesis) {
+      console.error("이 브라우저는 음성 합성을 지원하지 않습니다.");
+      return;
+    }
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "ko-KR";
+    utterance.onstart = () => {
+      console.log("음성 합성 시작:", text);
+    };
+    utterance.onend = () => {
+      console.log("음성 합성 종료");
+    };
+    utterance.onerror = (event) => {
+      console.error("음성 합성 중 오류 발생:", event.error);
+    };
+    synth.speak(utterance);
+  };
 
   return (
     <Container>
@@ -436,10 +544,10 @@ const CompletePlannerContent = () => {
       </InfoArea>
       <ButtonArea>
         <ChatButton>
-          <BsRobot onClick={() => { console.log(placeName, userPick) }} />
+          <BsRobot onClick={Chain} />
         </ChatButton>
         <ChatButton>
-          <FaMicrophone />
+          <FaMicrophone  onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}/>
         </ChatButton>
         <ChatButton>
           <MdDelete onClick={handleDelete} color="red" />
